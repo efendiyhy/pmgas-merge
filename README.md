@@ -9,7 +9,7 @@
   <a href="https://ek-instrumentation.com">Company Website</a>
 </p>
 
-# EK Air Quality Hub — Laptop Server
+# EK Air Quality Hub
 
 **Aplikasi monitoring kualitas udara berbasis laptop** untuk menerima dan menyatukan data dari dua perangkat ESP32 independen: **Particulate Matter (PM)** dan **Gas**. Dashboard bekerja di jaringan lokal, menampilkan pembacaan realtime, dan menyediakan pencatatan terstruktur untuk pengujian serta analisis data.
 
