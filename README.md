@@ -14,6 +14,25 @@
 **Aplikasi monitoring kualitas udara berbasis laptop** untuk menerima dan menyatukan data dari dua perangkat ESP32 independen: **Particulate Matter (PM)** dan **Gas**. Dashboard bekerja di jaringan lokal, menampilkan pembacaan realtime, dan menyediakan pencatatan terstruktur untuk pengujian serta analisis data.
 
 **Platform:** Windows 10/11 · **Runtime:** Python 3.9+ · **Server:** HTTP port `8787` · **Penyimpanan:** SQLite + CSV lokal
+## Galeri Dashboard
+
+<p align="center">
+  <a href="assets/github/ss1.png">
+    <img src="assets/github/ss1.png" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="assets/github/ss2.png">
+    <img src="assets/github/ss2.png" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="assets/github/ss3.png">
+    <img src="assets/github/ss3.png" width="100%" />
+  </a>
+</p>
 
 ## Instalasi cepat
 
