@@ -1,15 +1,16 @@
 # EK Instrumentation Laptop Server - GitHub one-line installer for Windows
-# Usage after publishing (edit $Repository in this file first):
-# irm https://raw.githubusercontent.com/OWNER/ek-laptop-server/main/install.ps1 | iex
+# Repository: https://github.com/efendiyhy/pmgas-merge
+# Install from trusted public repository:
+# irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# Change this ONE line before publishing to your own GitHub repository.
-$Repository = 'YOUR_GITHUB_USERNAME/ek-laptop-server'
+# Official repository for this installer.
+$Repository = 'efendiyhy/pmgas-merge'
 if ($env:EK_LAPTOP_REPO) { $Repository = $env:EK_LAPTOP_REPO.Trim() }
-if ($Repository -match '^YOUR_' -or $Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') {
-    throw 'Edit $Repository di install.ps1 menjadi USERNAME/ek-laptop-server sebelum push ke GitHub.'
+if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') {
+    throw 'Repository GitHub tidak valid. Gunakan format USERNAME/REPOSITORY.'
 }
 
 $Install = Join-Path $env:LOCALAPPDATA 'EKInstrumentation\LaptopServer'
