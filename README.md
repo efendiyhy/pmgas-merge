@@ -21,7 +21,7 @@ irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | i
 
    **http://localhost:8787**
 
-Installer mengunduh kode dari branch `main` pada repository ini, mencari Python **3.9 atau lebih baru**, dan jika perlu mencoba memasang Python 3.13 melalui `winget`. Apabila Python tidak dapat dipasang otomatis, instal dari [python.org](https://www.python.org/downloads/) lalu jalankan ulang perintah di atas.
+Installer mengunduh kode dari branch `main` pada repository ini, memeriksa Python **3.9 atau lebih baru**, dan mengabaikan `python.exe` yang rusak, alias Windows, maupun virtual environment yang tidak lengkap (termasuk error `No pyvenv.cfg file`). Jika tidak ditemukan instalasi Python normal, installer mencoba memasang Python 3.13 melalui `winget`. Apabila Python tidak dapat dipasang otomatis, instal dari [python.org](https://www.python.org/downloads/) lalu jalankan ulang perintah di atas.
 
 **Perhatian:** `irm ... | iex` mengunduh dan langsung menjalankan skrip PowerShell. Jalankan hanya setelah memeriksa sumber dan isi [`install.ps1`](./install.ps1). Koneksi internet diperlukan pada saat instalasi.
 
@@ -119,3 +119,17 @@ Script menghapus shortcut dan berkas program, tetapi **meninggalkan folder `data
 ---
 
 **EK Instrumentation** · Project: [`efendiyhy/pmgas-merge`](https://github.com/efendiyhy/pmgas-merge)
+
+## Jika muncul `No pyvenv.cfg file` pada laptop lain
+
+Pesan ini menunjukkan bahwa salah satu `python.exe` yang dideteksi tidak dapat berjalan dengan benar, misalnya bekas virtual environment atau instalasi Python yang tidak lengkap. **Tidak berkaitan dengan firmware ESP32 PM/Gas atau sensor.**
+
+Perbaikan tersedia pada `install.ps1` versi ini. Setelah mengunggah **`install.ps1` dan `launch.ps1` baru** ke branch `main`, buka PowerShell baru pada laptop yang bermasalah, lalu ulangi:
+
+```powershell
+irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
+```
+
+Versi ini melewati kandidat Python yang gagal dijalankan, mencari Python normal lain, atau memasang Python lewat `winget`. Folder `data/` lama tidak dihapus. Jika masih gagal, jalankan `py -0p` dan `where.exe python` untuk memeriksa instalasi Python, lalu lakukan **Repair** Python melalui Windows Settings atau instal versi resmi dari python.org.
+
+Catatan: jika repository belum diperbarui di GitHub, perintah `irm` tetap menjalankan installer lama.

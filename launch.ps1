@@ -16,9 +16,27 @@ try {
     if (-not (Is-HubRunning)) {
         $pathfile = Join-Path $root '.python_path'
         if (Test-Path $pathfile) { $python = (Get-Content -LiteralPath $pathfile -Raw).Trim() }
-        if (-not $python -or -not (Test-Path $python)) {
+        if (-not $python -or -not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            $python = $null
             $py = Get-Command py.exe -ErrorAction SilentlyContinue
-            if ($py) { $python = (& $py.Source -3 -c 'import sys;print(sys.executable)' 2>$null | Select-Object -First 1) }
+            if ($py) {
+                # Native stderr seperti "No pyvenv.cfg file" tidak boleh menghentikan launcher.
+                $proc = $null
+                try {
+                    $psi = New-Object System.Diagnostics.ProcessStartInfo
+                    $psi.FileName = $py.Source
+                    $psi.Arguments = '-3 -c "import sys;print(sys.executable)"'
+                    $psi.UseShellExecute = $false
+                    $psi.CreateNoWindow = $true
+                    $psi.RedirectStandardOutput = $true
+                    $psi.RedirectStandardError = $true
+                    $proc = [System.Diagnostics.Process]::Start($psi)
+                    if ($proc.WaitForExit(8000) -and $proc.ExitCode -eq 0) {
+                        $candidate = $proc.StandardOutput.ReadToEnd().Trim()
+                        if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf)) { $python = $candidate }
+                    } else { try { $proc.Kill() } catch {} }
+                } catch {} finally { if ($null -ne $proc) { $proc.Dispose() } }
+            }
         }
         if (-not $python -or -not (Test-Path $python)) { throw 'Python tidak ditemukan. Jalankan install.ps1 lagi.' }
         $pythonw = Join-Path (Split-Path $python -Parent) 'pythonw.exe'

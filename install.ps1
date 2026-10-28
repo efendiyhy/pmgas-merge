@@ -22,24 +22,75 @@ Write-Host ' EK INSTRUMENTATION / LAPTOP SERVER' -ForegroundColor White
 Write-Host '========================================' -ForegroundColor Magenta
 Write-Host ('Repository: ' + $Repository)
 
-function Find-Python {
-    $candidates = New-Object System.Collections.Generic.List[string]
-    $py = Get-Command py.exe -ErrorAction SilentlyContinue
-    if ($py) {
-        $resolved = (& $py.Source -3 -c 'import sys;print(sys.executable)' 2>$null | Select-Object -First 1)
-        if ($LASTEXITCODE -eq 0 -and $resolved) { $candidates.Add([string]$resolved) }
+# Jalankan executable eksternal via .NET agar stderr dari Python yang rusak
+# tidak mengakhiri installer saat $ErrorActionPreference = 'Stop'.
+# Berlaku untuk Windows PowerShell 5.1 dan PowerShell 7.
+function Invoke-SafeProcess {
+    param(
+        [Parameter(Mandatory=$true)][string]$Executable,
+        [Parameter(Mandatory=$true)][string]$Arguments
+    )
+    $process = $null
+    try {
+        if (-not (Test-Path -LiteralPath $Executable -PathType Leaf)) { return $null }
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $Executable
+        $psi.Arguments = $Arguments
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $process = [System.Diagnostics.Process]::Start($psi)
+        if (-not $process.WaitForExit(8000)) {
+            try { $process.Kill() } catch {}
+            return $null
+        }
+        if ($process.ExitCode -ne 0) { return $null }
+        return $process.StandardOutput.ReadToEnd().Trim()
+    } catch {
+        return $null
+    } finally {
+        if ($null -ne $process) { $process.Dispose() }
     }
-    $python = Get-Command python.exe -ErrorAction SilentlyContinue
-    if ($python) { $candidates.Add($python.Source) }
-    foreach ($base in @((Join-Path $env:LOCALAPPDATA 'Programs\Python'), (Join-Path $env:ProgramFiles 'Python'))) {
-        if (Test-Path $base) {
-            Get-ChildItem $base -Filter python.exe -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $candidates.Add($_.FullName) }
+}
+
+function Find-Python {
+    $candidates = New-Object 'System.Collections.Generic.List[string]'
+
+    # `py -3` biasanya mengarah ke instalasi Python resmi, bukan alias Microsoft Store.
+    foreach ($py in @(Get-Command py.exe -All -ErrorAction SilentlyContinue)) {
+        if (-not $py -or -not $py.Source) { continue }
+        $resolved = Invoke-SafeProcess -Executable $py.Source -Arguments '-3 -c "import sys;print(sys.executable)"'
+        if ($resolved -and (Test-Path -LiteralPath $resolved -PathType Leaf)) {
+            $candidates.Add($resolved)
         }
     }
+
+    # Cek semua entri PATH, bukan hanya entri pertama yang mungkin rusak.
+    foreach ($cmd in @(Get-Command python.exe -All -ErrorAction SilentlyContinue)) {
+        if ($cmd -and $cmd.Source) { $candidates.Add([string]$cmd.Source) }
+    }
+
+    # Pencarian tambahan jika PATH Windows belum diperbarui setelah instalasi.
+    $locations = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python'),
+        (Join-Path $env:ProgramFiles 'Python')
+    )
+    if (${env:ProgramFiles(x86)}) { $locations += (Join-Path ${env:ProgramFiles(x86)} 'Python') }
+    foreach ($base in $locations) {
+        if (Test-Path -LiteralPath $base) {
+            Get-ChildItem -LiteralPath $base -Filter python.exe -File -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object { $candidates.Add($_.FullName) }
+        }
+    }
+
     foreach ($candidate in ($candidates | Select-Object -Unique)) {
-        if (-not (Test-Path $candidate)) { continue }
-        $check = (& $candidate -c 'import sys;print(int(sys.version_info >= (3, 9)))' 2>$null | Select-Object -First 1)
-        if ($LASTEXITCODE -eq 0 -and $check -eq '1') { return $candidate }
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { continue }
+        # Python >=3.9, instalasi normal (bukan virtual environment sementara).
+        # Interpreter yang gagal, termasuk error 'No pyvenv.cfg file', dilewati.
+        $check = Invoke-SafeProcess -Executable $candidate -Arguments '-c "import sys;print(int(sys.version_info >= (3,9) and sys.prefix == sys.base_prefix))"'
+        if ($check -eq '1') { return $candidate }
+        Write-Host ('  Melewati Python tidak valid / tidak sesuai: ' + $candidate) -ForegroundColor DarkYellow
     }
     return $null
 }
