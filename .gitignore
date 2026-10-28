@@ -1,0 +1,15 @@
+# NEVER publish local measurements or device security settings
+/data/
+/records/
+/monitoring.sqlite3*
+/.python_path
+/.env
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.csv
+*.log
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EK Instrumentation — Air Quality Hub</title><link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+:root{--bg:#e8dcff;--ink:#150527;--dark:#270b48;--purple:#7026dc;--purple2:#ae79ff;--purple3:#d7bcff;--white:#fffaff;--mint:#c0ffd9;--border:3px solid var(--ink)}
+*[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.3}h1,h2,h3,p{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{max-width:1490px;margin:0 auto;padding:24px}
+header{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-bottom:19px;border-bottom:5px solid var(--ink)}.eyebrow{font-size:12px;font-weight:900;letter-spacing:2px}.logo{background:var(--dark);color:var(--white);padding:7px 12px;display:inline-block;box-shadow:4px 4px 0 var(--purple2);margin-bottom:14px}h1{font-size:clamp(28px,4.5vw,52px);line-height:.99;letter-spacing:-2px;font-weight:1000;text-transform:uppercase}.subtitle{font-size:13px;margin-top:9px;font-weight:600}.status{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.chip{display:inline-flex;gap:7px;align-items:center;border:2px solid var(--ink);padding:9px 11px;background:var(--white);box-shadow:3px 3px 0 var(--ink);font-size:12px;font-weight:900;text-transform:uppercase}.dot{width:8px;height:8px;border-radius:50%;background:#d54b84;display:inline-block}.dot.on{background:#1cbe76}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:23px 0 19px}.stat{border:var(--border);box-shadow:5px 5px 0 var(--ink);padding:14px;background:var(--white);min-height:88px}.stat:nth-child(2){background:var(--purple3)}.stat:nth-child(3){background:#dec8ff}.stat:nth-child(4){background:var(--mint)}.stat small{font-weight:900;text-transform:uppercase;font-size:10px;letter-spacing:1px}.stat strong{display:block;font-size:29px;margin-top:5px;letter-spacing:-1.2px}.bar{background:var(--dark);color:var(--white);border:var(--border);box-shadow:6px 6px 0 var(--ink);padding:13px 15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:26px}.bar .group{display:flex;gap:10px;flex-wrap:wrap}.bar .stretch{flex:1}.button{font-size:13px;font-weight:900;border:2px solid var(--ink);padding:12px 18px;background:var(--white);color:var(--ink);box-shadow:3px 3px 0 var(--ink);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}.button:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}.button:disabled{cursor:not-allowed;opacity:.5;transform:none}.button.rec{background:#c2ffda}.button.stop{background:#ff9ab4}.button.secondary{background:var(--purple3)}.recording{color:#c2ffda;font-size:12px;font-weight:900;letter-spacing:1px}.recording.live{color:#ff9ab4}.bar small{font-size:11px;color:#e5d1ff}
+.sectionhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-end;margin:18px 0 13px;flex-wrap:wrap}.sectionhead h2{font-weight:1000;font-size:23px;text-transform:uppercase;letter-spacing:-.5px}.sectionhead p{font-size:12px;font-weight:600}.charts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.plotcard{background:var(--white);border:var(--border);box-shadow:6px 6px 0 var(--ink);min-width:0;padding:14px}.plotcard .charthead{display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:9px}.metricname{font-size:18px;font-weight:1000;letter-spacing:-.5px}.metricval{font-size:25px;font-weight:1000;letter-spacing:-1px}.unit{font-size:11px;font-weight:800}.chartbg{border:2px solid var(--ink);background:#fbf8ff;padding:3px;height:200px}.chartbg canvas{display:block;width:100%;height:100%}.legend{display:flex;gap:15px;margin-top:9px;flex-wrap:wrap;font-size:11px;font-weight:800}.swatch{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:5px}.panel{margin-top:26px;background:var(--white);border:var(--border);box-shadow:6px 6px 0 var(--ink);padding:18px}.panel h2{font-size:19px;text-transform:uppercase;letter-spacing:-.2px}.panel small{display:block;margin:7px 0 14px}.tableframe{overflow:auto;max-height:260px;border:2px solid var(--ink)}table{border-collapse:collapse;width:100%;min-width:680px}th,td{padding:10px;border-bottom:1px solid #c5a8e7;text-align:left;font-size:12px}th{background:var(--dark);color:var(--white);font-weight:900;text-transform:uppercase;position:sticky;top:0}td{font-weight:600}td a{font-weight:900;text-decoration:underline}.empty{text-align:center;font-weight:700;padding:25px}.hint{margin:22px 0 0;font-size:11px;font-weight:700}.alert{color:#bb003c;font-size:12px;font-weight:900;min-height:16px;margin-top:9px}
+@media(max-width:1100px){.charts{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:660px){.app{padding:15px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.charts{grid-template-columns:1fr}.bar{align-items:flex-start}.bar .button{flex:1}.bar .stretch{flex-basis:100%}.stat strong{font-size:24px}}
+/* REV5 — Session recording controls */
+.recgrid{display:grid;grid-template-columns:minmax(280px,1.35fr) minmax(250px,1fr) minmax(310px,1.15fr);gap:16px;margin:23px 0 20px}
+.controlcard{background:var(--white);border:var(--border);box-shadow:6px 6px 0 var(--ink);padding:17px;min-width:0}
+.controlcard.dark{background:var(--dark);color:var(--white)}
+.controlcard .sectionlabel{font-size:11px;font-weight:1000;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0;margin:11px 0}
+.field label{font-size:11px;letter-spacing:.7px;text-transform:uppercase;font-weight:900}
+.field input,.field select{background:#fffaff;color:var(--ink);border:2px solid var(--ink);border-radius:0;outline:none;min-width:0;max-width:100%;font:700 14px Arial,sans-serif;padding:11px 10px;min-height:41px}
+.field input:focus,.field select:focus{box-shadow:3px 3px 0 var(--purple2)}
+.field :disabled{opacity:.7;background:#d7c8ec}
+.fieldrow{display:flex;gap:10px;flex-wrap:wrap}.fieldrow .field{flex:1 1 125px}
+.controlcard .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.controlcard .btnrow>*{flex:1 1 auto;text-align:center}
+.microcopy{font-size:11px;line-height:1.5;font-weight:650;opacity:.88;margin:8px 0 0}
+.liveinfo{border:2px solid #a66dff;padding:11px;background:#3d1b65;margin-top:11px}
+.liveinfo b{font-size:14px}.liveinfo .clock{font-size:28px;font-weight:1000;letter-spacing:-.7px;display:block;margin-top:4px}
+.currentlabel{background:#e9d9ff;border:2px solid var(--ink);padding:10px 12px;font-weight:900;overflow-wrap:anywhere}
+.statusline{font-size:12px;font-weight:850;margin:11px 0 4px;min-height:17px}
+.alert{min-height:18px}
+@media(max-width:1120px){.recgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.recgrid .controlcard.dark{grid-column:1/-1}}
+@media(max-width:680px){.recgrid{grid-template-columns:1fr}.recgrid .controlcard.dark{grid-column:auto}}
+
+/* REV7 - SUHU + KELEMBAPAN / CSS brutalist, circular, offline 7-segment */
+.env-section{margin:26px 0 0}
+.env-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.env-card{min-width:0;background:#ceb0ff;border:var(--border);box-shadow:6px 6px 0 var(--ink);padding:18px 17px 19px;position:relative;overflow:hidden}
+.env-card.humidity{background:#e6d7ff}
+.env-top{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+.env-title{font-weight:1000;text-transform:uppercase;font-size:22px;letter-spacing:-.6px}
+.env-chip{border:2px solid var(--ink);background:var(--white);padding:6px 9px;font-weight:900;font-size:10px;letter-spacing:1.2px}
+.env-dial{width:239px;height:239px;max-width:100%;border:5px solid var(--ink);border-radius:50%;background:#230d3e;color:#fff;box-shadow:7px 7px 0 #7130d3,inset 0 0 0 8px #55208b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin:0 auto 23px;position:relative}
+.env-dial::before{content:'';position:absolute;inset:15px;border-radius:50%;border:1px solid #9e79c4;opacity:.45;pointer-events:none}
+.env-dial.ready{box-shadow:7px 7px 0 #7130d3,inset 0 0 0 8px #55208b,0 0 0 1px #230d3e}
+.env-dial-type{color:#eadbff;font-size:11px;font-weight:900;letter-spacing:1.5px;z-index:1}
+.env-digits{display:flex;align-items:center;justify-content:center;gap:1px;width:100%;height:70px;z-index:1;padding:0 23px}
+.env-digits svg{display:block;flex-shrink:1;min-width:0}
+.env-digits .on{fill:#ffffff;filter:drop-shadow(0 0 3px rgba(255,255,255,.85))}
+.env-digits .off{fill:#50386d}
+.env-unit{color:#fff;font-size:14px;font-weight:1000;letter-spacing:2px;z-index:1}
+.env-sources{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.env-source{border:2px solid var(--ink);background:#fffaff;padding:10px 12px;min-width:0;box-shadow:3px 3px 0 var(--ink)}
+.env-source small{font-size:10px;font-weight:900;letter-spacing:1px;display:block}
+.env-source strong{font-size:19px;font-weight:950;letter-spacing:-.5px;display:block;white-space:nowrap;font-variant-numeric:tabular-nums;margin-top:4px}
+.env-source em{font-size:10px;font-weight:900;display:block;font-style:normal;color:#7547a8;margin-top:3px}
+.env-status{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:900;margin-top:14px;min-height:16px;letter-spacing:.15px;line-height:1.35}
+.env-note{font-size:11px;font-weight:700;line-height:1.4;margin:12px 0 0}
+@media(max-width:850px){.env-grid{grid-template-columns:1fr}.env-card{padding:17px}.env-dial{width:225px;height:225px}}
+@media(max-width:420px){.env-source{padding:9px 8px}.env-source strong{font-size:16px}.env-digits{padding:0 21px}}
+
+/* REV8 - pilihan Moving Average hanya untuk rendering enam grafik. */
+.graphhead{align-items:center}
+.graphhead > div:first-child{min-width:210px}
+.graph-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 10px;border:3px solid var(--ink);background:#d9c0ff;box-shadow:4px 4px 0 var(--ink)}
+.graph-control .control-label{font-size:11px;letter-spacing:.9px;font-weight:1000;text-transform:uppercase;white-space:nowrap}
+.graph-select{min-width:180px;max-width:100%;border:3px solid var(--ink);border-radius:0;background:#fff;color:var(--ink);font:900 14px Arial,system-ui,sans-serif;padding:10px 32px 10px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.graph-select:focus-visible{outline:3px solid #ff4788;outline-offset:3px}
+.graph-description{font-size:11px;font-weight:750;color:#50316b;margin:-4px 0 13px;line-height:1.5}
+@media(max-width:650px){.graph-control{width:100%}.graph-select{width:100%;flex:1}.graph-control .control-label{width:100%}}
+
+/* REV9: purple neo-brutalist application shell, accessible light/dark themes */
+.layout{display:grid;grid-template-columns:228px minmax(0,1fr);max-width:1920px;margin:0 auto;min-height:100vh}
+.app{width:100%;padding:27px 27px 60px;min-width:0}
+.sidebar{position:sticky;top:0;height:100vh;background:#270b48;color:#fff;border-right:5px solid #100519;padding:21px 14px;display:flex;flex-direction:column;gap:15px;z-index:10}
+.brandbox{border:3px solid #d9b8ff;padding:15px 12px;background:#4c217d;box-shadow:5px 5px 0 #ad6cff;letter-spacing:1px}
+.brandbox strong{display:block;font-size:29px;line-height:1;font-weight:1000}.brandbox span{font-size:11px;font-weight:900}
+.sidecaption{font:900 10px Arial,sans-serif;letter-spacing:2px;margin-top:10px;color:#d9b8ff}
+.sidenav{display:flex;flex-direction:column;gap:7px}
+.navbtn{display:flex;align-items:center;gap:10px;width:100%;color:#efe6ff;background:transparent;border:2px solid transparent;text-align:left;padding:12px 11px;font-size:12px;font-weight:900;letter-spacing:.5px;cursor:pointer}
+.navbtn:hover{border-color:#ab77ff}.navbtn.active{color:#200d39;background:#cfb0ff;border:2px solid #f6ebff;box-shadow:4px 4px 0 #8c43ff}
+.navbtn .num{width:24px;font-size:12px;opacity:.7}
+.sidefooter{margin-top:auto;font-size:11px;line-height:1.6;font-weight:800;color:#ceb9e9;border-top:1px solid #895baa;padding-top:12px}
+.page-intro{border-left:6px solid var(--purple);margin:22px 0;padding:8px 15px}
+.page-intro h2{font-weight:1000;font-size:24px;text-transform:uppercase}.page-intro p{font-size:12px;font-weight:700;margin-top:4px}
+.page-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0}
+.quickbutton{background:var(--purple3);color:var(--ink);border:2px solid var(--ink);padding:10px 13px;box-shadow:3px 3px 0 var(--ink);font-size:12px;font-weight:900;cursor:pointer}
+[data-page]:not(.page-active){display:none!important}
+[data-page="record"].page-active{margin-top:20px}
+.download-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:20px 0}
+.download-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:16px;background:var(--white);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--ink);padding:20px;min-height:190px}
+.download-tile strong{font-size:19px;font-weight:1000}.download-tile p{font-size:12px;font-weight:650}.download-tile a{margin-top:auto}
+.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+.settingcard{border:3px solid var(--ink);background:var(--white);box-shadow:6px 6px 0 var(--ink);padding:22px}
+.settingcard h3{font-size:19px;font-weight:1000;text-transform:uppercase}.settingcard p{margin-top:9px;font-size:12px;font-weight:650;line-height:1.6}
+.theme-choice{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.themebtn{border:3px solid var(--ink);background:var(--purple3);color:var(--ink);font-weight:1000;padding:12px 18px;cursor:pointer}
+.themebtn.selected{background:#8a43e8;color:#fff;border-color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.dangerpanel{border:3px solid #b43253;background:#ffe0e8;padding:16px;margin-top:15px;color:#381321}
+.dangerpanel input{width:100%;min-width:0;border:2px solid #381321;background:#fff;color:#150527;padding:11px;font-size:13px;margin:7px 0 10px}
+.dangerpanel label{font-size:12px;font-weight:900;display:block}
+.dangerpanel .dangerbutton{border:3px solid #381321;background:#bd2449;color:#fff;font-size:12px;font-weight:1000;padding:13px 18px;cursor:pointer}
+.dangerpanel .dangerbutton:disabled{opacity:.55;cursor:not-allowed}
+.global-notice{margin-top:25px;min-height:25px;font-size:13px;font-weight:800;line-height:1.5}
+.smallpill{background:var(--purple3);border:2px solid var(--ink);padding:7px 11px;font-size:11px;font-weight:900}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ff68ac;outline-offset:3px}
+body[data-theme="dark"]{--bg:#110c1c;--ink:#f6eeff;--dark:#241139;--purple:#b58aff;--purple2:#9d62eb;--purple3:#41235e;--white:#261a36;--mint:#214b3e;background:var(--bg);color:var(--ink)}
+body[data-theme="dark"] .stat:nth-child(2),body[data-theme="dark"] .stat:nth-child(3){background:#382052}
+body[data-theme="dark"] .logo{color:#fff;background:#422168}
+body[data-theme="dark"] .bar{color:#fff;background:#342050}
+body[data-theme="dark"] .bar small{color:#dac8f6}
+body[data-theme="dark"] .button{background:#372451;color:#fff}
+body[data-theme="dark"] .button.rec{background:#23725d;color:#fff}
+body[data-theme="dark"] .button.stop{background:#9b3855;color:#fff}
+body[data-theme="dark"] .button.secondary{background:#4a2d73}
+body[data-theme="dark"] .field input,body[data-theme="dark"] .field select,body[data-theme="dark"] .graph-select{background:#1d142c;color:#fff;border-color:#b68ff2}
+body[data-theme="dark"] .field :disabled{background:#2b2342;color:#a99bbc}
+body[data-theme="dark"] .controlcard.dark{background:#211332;color:#fff}
+body[data-theme="dark"] .controlcard.dark .microcopy{color:#e7d5fc}
+body[data-theme="dark"] .currentlabel{background:#4d2b74;color:#fff}
+body[data-theme="dark"] .graph-control{background:#34204f}
+body[data-theme="dark"] .graph-description{color:#d8c4f2}
+body[data-theme="dark"] .chartbg{background:#1b1529}
+body[data-theme="dark"] .env-card,body[data-theme="dark"] .env-card.humidity{background:#322048}
+body[data-theme="dark"] .env-chip{background:#4b2e66;color:#fff}
+body[data-theme="dark"] .env-source{background:#1e1731;color:#fff}
+body[data-theme="dark"] .env-source em{color:#ddc0ff}
+body[data-theme="dark"] .settingcard{background:#251934}
+body[data-theme="dark"] .download-tile{background:#251934}
+body[data-theme="dark"] .smallpill{background:#50326f}
+body[data-theme="dark"] .themebtn.selected{background:#7a3ebf;color:#fff}
+body[data-theme="dark"] .sidebar{background:#1b112c;border-color:#9f80c8}
+body[data-theme="dark"] .navbtn.active{background:#7846b6;color:#fff}
+body[data-theme="dark"] .chip{background:#251934;color:#fff}
+body[data-theme="dark"] th{color:#fff;background:#36214e}
+body[data-theme="dark"] .controlcard.dark{color:#fff}
+body[data-theme="dark"] .hint{color:#d9c9ed}
+body[data-theme="dark"] .legend .swatch[style*="#7123df"]{background:#c69aff!important}
+body[data-theme="dark"] .legend .swatch[style*="#ff4788"]{background:#ff83be!important}
+@media(max-width:1120px){.layout{grid-template-columns:190px minmax(0,1fr)}.download-grid{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.layout{display:block}.sidebar{height:auto;position:relative;padding:14px;gap:7px}.brandbox{display:none}.sidecaption,.sidefooter{display:none}.sidenav{flex-direction:row;flex-wrap:wrap}.navbtn{width:auto;flex:1 1 115px;padding:10px 8px}.app{padding:17px 16px 48px}.download-grid{grid-template-columns:1fr}}
+</style></head>
+<body data-theme="light"><div class="layout">
+<aside class="sidebar" aria-label="Navigasi aplikasi">
+  <div class="brandbox"><strong>EK<span style="font-size:13px"> / INSTRUMENTATION</span></strong><span>AIR QUALITY HUB</span></div>
+  <div class="sidecaption">WORKSPACE / MENU</div>
+  <nav class="sidenav">
+    <button type="button" class="navbtn active" data-nav="dashboard"><span class="num">01</span> DASHBOARD</button>
+    <button type="button" class="navbtn" data-nav="record"><span class="num">02</span> RECORD &amp; LABEL</button>
+    <button type="button" class="navbtn" data-nav="history"><span class="num">03</span> RIWAYAT</button>
+    <button type="button" class="navbtn" data-nav="downloads"><span class="num">04</span> EKSPOR DATA</button>
+    <button type="button" class="navbtn" data-nav="settings"><span class="num">05</span> PENGATURAN</button>
+  </nav>
+  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK INSTRUMENTATION</div>
+</aside>
+<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
+<div class="status"><span class="chip"><i id="pmDot" class="dot"></i> PM <span id="pmStatus">OFFLINE</span></span><span class="chip"><i id="gasDot" class="dot"></i> GAS <span id="gasStatus">OFFLINE</span></span><span class="chip"><i id="serverDot" class="dot on"></i> LAPTOP ONLINE</span></div></header>
+<section class="summary page-active" data-page="dashboard"><div class="stat"><small>Data masuk / total</small><strong id="nTotal">0</strong></div><div class="stat"><small>Data PM</small><strong id="nPM">0</strong></div><div class="stat"><small>Data gas</small><strong id="nGas">0</strong></div><div class="stat"><small>Sesi saat ini</small><strong id="nSession">—</strong></div></section>
+<div class="page-intro" data-page="record"><h2>Record &amp; Label</h2><p>Mulai, berhenti, atur durasi, dan ubah label tanpa menghentikan sesi.</p></div>
+<section class="recgrid" aria-label="Pengaturan rekaman" data-page="record">
+<article class="controlcard">
+  <div class="sectionlabel">01 / Pengaturan Sesi</div>
+  <div class="field"><label for="sessionName">Nama sesi rekaman</label><input id="sessionName" maxlength="120" autocomplete="off" placeholder="Contoh: Pengujian Motor A"></div>
+  <div class="field"><label for="durationMode">Durasi record</label><select id="durationMode"><option value="manual">Manual — sampai klik STOP</option><option value="60">1 menit</option><option value="300">5 menit</option><option value="600">10 menit</option><option value="1800">30 menit</option><option value="3600">1 jam</option><option value="custom">Custom (tentukan sendiri)</option></select></div>
+  <div class="fieldrow" id="customDuration" hidden><div class="field"><label for="customNumber">Jumlah</label><input id="customNumber" type="number" min="1" max="604800" step="1" value="2" inputmode="numeric"></div><div class="field"><label for="customUnit">Satuan</label><select id="customUnit"><option value="60">Menit</option><option value="1">Detik</option><option value="3600">Jam</option></select></div></div>
+  <div class="btnrow"><button id="start" type="button" class="button rec">● RECORD</button><button id="stop" type="button" class="button stop">■ STOP MANUAL</button></div>
+  <p class="microcopy">Waktu record otomatis dihitung oleh server laptop; jika memilih Manual, rekaman berhenti setelah tombol STOP ditekan.</p>
+</article>
+<article class="controlcard">
+  <div class="sectionlabel">02 / Label Selama Rekaman</div>
+  <div class="field"><label for="labelInput">Label untuk baris data baru</label><input id="labelInput" maxlength="80" autocomplete="off" placeholder="Contoh: RPM1000"></div>
+  <button id="applyLabel" type="button" class="button secondary" style="width:100%;margin-top:9px">✓ TERAPKAN LABEL</button>
+  <div class="field" style="margin-top:17px"><label>Label yang sedang aktif</label><div class="currentlabel" id="activeLabel">—</div></div>
+  <p class="microcopy">Saat recording, ubah teks lalu klik TERAPKAN LABEL. Rekaman tidak terputus; data berikutnya memakai label baru. Label sebelumnya tetap di CSV.</p>
+</article>
+<article class="controlcard dark">
+  <div class="sectionlabel">03 / Status Rekaman</div>
+  <div id="recStatus" class="recording">READY — NOT RECORDING</div>
+  <div class="liveinfo"><div id="activeName" class="microcopy">Belum ada sesi aktif</div><span id="elapsed" class="clock">00:00</span><div id="remaining" class="microcopy">Mode manual / tidak merekam</div><div id="sessionRows" class="statusline">0 baris sesi</div></div>
+  <div class="btnrow"><a class="button secondary" id="sessionDownload" href="#">CSV SESI</a><a class="button" href="/api/download/all">CSV GABUNGAN</a><a class="button" href="/api/download/raw">CSV MENTAH (ARSIP)</a></div>
+  <p class="microcopy">Dashboard tetap menampilkan data ketika STOP; semua data masuk selalu tersimpan dalam SQLite.</p>
+</article>
+</section>
+<div class="page-toolbar page-active" data-page="dashboard"><strong class="smallpill">LIVE 1 SECOND</strong><button class="quickbutton" type="button" data-go="record">● MULAI REKAMAN / LABEL</button></div>
+<div class="sectionhead graphhead page-active" data-page="dashboard">
+  <div><h2>6 Grafik Realtime</h2><p>PM1, PM2.5, PM10, CO, CO₂, NO₂</p></div>
+  <div class="graph-control">
+    <label class="control-label" for="graphMode">Tampilan Grafik</label>
+    <select id="graphMode" class="graph-select" aria-label="Pilih Data Asli atau Moving Average untuk seluruh grafik">
+      <option value="1" selected>DATA ASLI</option>
+      <option value="10">MA 10</option>
+      <option value="20">MA 20</option>
+      <option value="50">MA 50</option>
+      <option value="100">MA 100</option>
+    </select>
+  </div>
+</div>
+<p data-page="dashboard" class="graph-description page-active" id="graphDescription" role="status">DATA ASLI — grafik menampilkan pembacaan sensor tanpa perataan. Angka besar, database, dan CSV selalu menggunakan data asli.</p>
+<section class="charts page-active" data-page="dashboard">
+<article class="plotcard" data-type="pm" data-pair="pm1_pms1,pm1_pms2"><div class="charthead"><div><div class="metricname">PM1</div><div class="unit">µg/m³</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>PMS 1</span><span><i class="swatch" style="background:#ff4788"></i>PMS 2</span></div></article>
+<article class="plotcard" data-type="pm" data-pair="pm25_pms1,pm25_pms2"><div class="charthead"><div><div class="metricname">PM2.5</div><div class="unit">µg/m³</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>PMS 1</span><span><i class="swatch" style="background:#ff4788"></i>PMS 2</span></div></article>
+<article class="plotcard" data-type="pm" data-pair="pm10_pms1,pm10_pms2"><div class="charthead"><div><div class="metricname">PM10</div><div class="unit">µg/m³</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>PMS 1</span><span><i class="swatch" style="background:#ff4788"></i>PMS 2</span></div></article>
+<article class="plotcard" data-type="gas" data-pair="co_ppm"><div class="charthead"><div><div class="metricname">CO</div><div class="unit">ppm</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>Gas sensor</span></div></article>
+<article class="plotcard" data-type="gas" data-pair="co2_ppm"><div class="charthead"><div><div class="metricname">CO₂</div><div class="unit">ppm</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>Gas sensor</span></div></article>
+<article class="plotcard" data-type="gas" data-pair="no2_ppm"><div class="charthead"><div><div class="metricname">NO₂</div><div class="unit">ppm</div></div><div class="metricval">—</div></div><div class="chartbg"><canvas></canvas></div><div class="legend"><span><i class="swatch" style="background:#7123df"></i>Gas sensor</span></div></article>
+</section>
+
+<!-- REV7: average sensor climate — two independent digital circular widgets -->
+<section class="env-section page-active" data-page="dashboard" aria-label="Widget suhu dan kelembapan rata-rata">
+  <div class="sectionhead"><h2>Suhu &amp; Kelembapan</h2><p>Rata-rata perangkat PM + Gas · pembaruan tiap 1 detik</p></div>
+  <div class="env-grid">
+    <article class="env-card temperature">
+      <div class="env-top"><h3 class="env-title">Suhu rata-rata</h3><span class="env-chip">TEMPERATURE</span></div>
+      <div class="env-dial" id="climateTempDial" role="status" aria-label="Suhu rata-rata belum tersedia">
+        <div class="env-dial-type">LIVE / 2 DEVICES</div>
+        <div class="env-digits" id="climateTempDigits" aria-hidden="true"></div>
+        <div class="env-unit">°C</div>
+      </div>
+      <div class="env-sources">
+        <div class="env-source"><small>PM / SUHU</small><strong id="climateTempPM">—</strong><em id="climateTempPMState">MENUNGGU DATA</em></div>
+        <div class="env-source"><small>GAS / SUHU</small><strong id="climateTempGas">—</strong><em id="climateTempGasState">MENUNGGU DATA</em></div>
+      </div>
+      <div class="env-status"><i class="dot" id="climateTempDot"></i><span id="climateTempStatus">MENUNGGU KEDUA ALAT</span></div>
+    </article>
+    <article class="env-card humidity">
+      <div class="env-top"><h3 class="env-title">Kelembapan rata-rata</h3><span class="env-chip">HUMIDITY</span></div>
+      <div class="env-dial" id="climateHumDial" role="status" aria-label="Kelembapan rata-rata belum tersedia">
+        <div class="env-dial-type">LIVE / 2 DEVICES</div>
+        <div class="env-digits" id="climateHumDigits" aria-hidden="true"></div>
+        <div class="env-unit">% RH</div>
+      </div>
+      <div class="env-sources">
+        <div class="env-source"><small>PM / RH</small><strong id="climateHumPM">—</strong><em id="climateHumPMState">MENUNGGU DATA</em></div>
+        <div class="env-source"><small>GAS / RH</small><strong id="climateHumGas">—</strong><em id="climateHumGasState">MENUNGGU DATA</em></div>
+      </div>
+      <div class="env-status"><i class="dot" id="climateHumDot"></i><span id="climateHumStatus">MENUNGGU KEDUA ALAT</span></div>
+    </article>
+  </div>
+  <p class="env-note">Rata-rata hanya dihitung saat dua alat memiliki nilai valid. Jika data berasal dari antrean SD yang terlambat, status ditandai <b>DATA TERTUNDA</b>; nilainya bukan pembacaan langsung saat ini.</p>
+</section>
+<section id="historyPanel" class="panel page-active" data-page="dashboard"><div class="sectionhead" style="margin:0 0 12px"><h2>Record History</h2><p>CSV gabungan per detik, mencakup seluruh parameter sensor</p></div><div class="tableframe"><table><thead><tr><th>ID</th><th>Nama sesi</th><th>Mode</th><th>Mulai (UTC)</th><th>Selesai (UTC)</th><th>Unduh CSV</th></tr></thead><tbody id="sessions"><tr><td colspan="6" class="empty">Belum ada sesi</td></tr></tbody></table></div></section>
+<p class="hint page-active" data-page="dashboard">DATA STORAGE: SQLite otomatis menyimpan semua parameter termasuk suhu, kelembapan, tegangan sensor, dan Rs/R0, meskipun tidak tampil di grafik. CSV sesi dan CSV gabungan menggabungkan PM + Gas per detik berdasarkan timestamp pengukuran, tanpa kolom device, serta menyimpan session_name dan label. Bila salah satu sumber tidak tersedia untuk detik tersebut, kolomnya dibiarkan kosong; CSV mentah tetap tersedia untuk audit. Record otomatis berhenti sesuai durasi atau manual lewat STOP. Endpoint ESP: <b>/api/ingest</b>, port <b>8787</b>. Gunakan jaringan LAN tepercaya.</p>
+
+<div class="page-intro" data-page="downloads"><h2>Ekspor &amp; Database</h2><p>Unduh data asli, gabungan, atau hasil sesi. File lokal berada dalam satu folder.</p></div>
+<section data-page="downloads" class="download-grid">
+  <article class="download-tile"><strong>01 / CSV Gabungan</strong><p>PM dan Gas dipasangkan berdasarkan waktu sensor, tanpa kolom device; mencakup seluruh parameter.</p><a class="button secondary" href="/api/download/all">UNDUH CSV</a></article>
+  <article class="download-tile"><strong>02 / CSV Mentah</strong><p>Setiap paket sensor disimpan apa adanya untuk audit, lengkap dengan waktu terima dan identitas sumber.</p><a class="button secondary" href="/api/download/raw">UNDUH CSV</a></article>
+  <article class="download-tile"><strong>03 / CSV Sesi</strong><p>Pilih sesi dari Riwayat Record untuk mengunduh CSV yang sesuai sesi dan perubahan labelnya.</p><button type="button" class="button secondary" data-go="history">BUKA RIWAYAT</button></article>
+</section>
+<div class="page-intro" data-page="settings"><h2>Pengaturan Aplikasi</h2><p>Tema tampilan, informasi penyimpanan, dan pengelolaan data lokal.</p></div>
+<section class="settings-grid" data-page="settings">
+  <article class="settingcard"><h3>01 / Tema Tampilan</h3><p>Pilih tema terang atau gelap. Pilihan tersimpan di browser ini dan tidak memengaruhi pembacaan sensor.</p>
+    <div class="theme-choice"><button class="themebtn selected" type="button" data-theme-choice="light">☀ TERANG</button><button class="themebtn" type="button" data-theme-choice="dark">☾ GELAP</button></div>
+    <h3 style="margin-top:32px">02 / Folder Data</h3><p>Semua file disimpan pada <b>data/</b> di folder instalasi, terdiri dari <b>monitoring.sqlite3</b>, file dukungan SQLite, dan <b>records/</b> untuk CSV sesi. Folder data tidak ditimpa saat update installer.</p>
+  </article>
+  <article class="settingcard"><h3>03 / Hapus Semua Data Lokal</h3><p>Tindakan permanen: menghapus pembacaan, riwayat sesi, perubahan label, CSV sesi, dan cadangan migrasi lokal. Tidak menghapus data di microSD ESP atau Supabase. Hentikan RECORD terlebih dahulu.</p>
+    <div class="dangerpanel"><label for="deleteConfirm">Ketik HAPUS SEMUA untuk konfirmasi</label><input id="deleteConfirm" autocomplete="off" placeholder="HAPUS SEMUA" maxlength="30">
+      <label for="deletePassword">Password administrator lokal</label><input id="deletePassword" type="password" autocomplete="off" maxlength="100" placeholder="Masukkan password">
+      <label style="display:flex;align-items:center;gap:9px;margin:8px 0 17px"><input id="deleteCheck" type="checkbox" style="width:18px;height:18px;margin:0"> Saya memahami data lokal tidak dapat dipulihkan.</label>
+      <button class="dangerbutton" id="deleteButton" type="button">HAPUS SEMUA DATA LOKAL</button><p id="deleteStatus" role="status"></p>
+    </div>
+  </article>
+</section>
+<div class="global-notice" id="error" role="status" aria-live="polite"></div>
+</main></div>
+<script>
+'use strict';
+const el=id=>document.getElementById(id);
+const cards=[...document.querySelectorAll('.plotcard')];
+let rows=[];
+const fmt=(v,dp=2)=>typeof v==='number'&&Number.isFinite(v)?v.toLocaleString('id-ID',{maximumFractionDigits:dp}):'—';
+function markStatus(dot,status,last){let ok=last && Date.now()-Date.parse(last)<20000;el(dot).classList.toggle('on',!!ok);el(status).textContent=ok?'ONLINE':'OFFLINE'}
+
+// REV7: White seven-segment digital numerals (SVG; no external fonts).
+const segments={
+ a:'9,3 29,3 25,8 13,8',b:'31,6 35,10 35,29 31,33 27,29 27,12',
+ c:'31,37 35,41 35,60 31,64 27,58 27,42',d:'13,62 25,62 29,67 9,67 5,64',
+ e:'5,37 9,42 9,58 5,64 1,60 1,41',f:'5,6 9,12 9,29 5,33 1,29 1,10',
+ g:'9,33 29,33 25,38 13,38 5,35'};
+const segmentMasks={'0':'abcdef','1':'bc','2':'abged','3':'abgcd','4':'fgbc','5':'afgcd','6':'afgecd','7':'abc','8':'abcdefg','9':'abfgcd','-':'g'};
+const svgNS='http://www.w3.org/2000/svg';
+function digitalNumber(hostId,text){
+  const host=el(hostId);host.replaceChildren();
+  for(const char of text){
+    const svg=document.createElementNS(svgNS,'svg');
+    svg.setAttribute('viewBox',char==='.'?'0 0 13 70':'0 0 38 70');
+    svg.setAttribute('width',char==='.'?'12':'32');svg.setAttribute('height','62');
+    if(char==='.'){
+      const dot=document.createElementNS(svgNS,'circle');
+      dot.setAttribute('cx','6');dot.setAttribute('cy','64');dot.setAttribute('r','4');dot.setAttribute('class','on');svg.appendChild(dot);
+    }else{
+      for(const [name,points] of Object.entries(segments)){
+        const poly=document.createElementNS(svgNS,'polygon');poly.setAttribute('points',points);
+        poly.setAttribute('class',(segmentMasks[char]||'').includes(name)?'on':'off');svg.appendChild(poly);
+      }
+    }
+    host.appendChild(svg);
+  }
+}
+// Last received packet is preferred over sensor timestamp order to handle SD backfill.
+// Never silently call backfilled measurements live.
+function latestClimatePacket(kind){
+  for(let i=rows.length-1;i>=0;i--){
+    const r=rows[i];if(r.device_type!==kind)continue;
+    const received=Date.parse(r.received_at||'');
+    const age=Date.now()-received;
+    if(!Number.isFinite(age)||age>20000||age < -5000)return {ok:false,status:'OFFLINE >20 DETIK'};
+    const measured=Date.parse(r.timestamp||'');
+    const delayed=Number.isFinite(measured)&&(Date.now()-measured>30000||measured-Date.now()>10000);
+    return {ok:true,measurements:r.measurements||{},delayed,status:delayed?'DATA SD TERTUNDA':'LIVE'};
+  }
+  return {ok:false,status:'BELUM ADA DATA'};
+}
+function climateMetric(packet,key,min,max){
+  if(!packet.ok)return {ok:false,status:packet.status};
+  const value=packet.measurements[key];
+  if(typeof value!=='number'||!Number.isFinite(value)||value<min||value>max)return {ok:false,status:'DATA TIDAK VALID'};
+  return {ok:true,value,status:packet.status,delayed:packet.delayed};
+}
+function updateClimateWidget(prefix,pm,gas,unit,ariaName){
+  const ok=pm.ok&&gas.ok;
+  const avg=ok?(pm.value+gas.value)/2:null;
+  const delayed=ok&&(pm.delayed||gas.delayed);
+  digitalNumber(prefix+'Digits',ok?avg.toFixed(2):'--.--');
+  el(prefix+'PM').textContent=pm.ok?fmt(pm.value,2)+' '+unit:'—';
+  el(prefix+'Gas').textContent=gas.ok?fmt(gas.value,2)+' '+unit:'—';
+  el(prefix+'PMState').textContent=pm.status;
+  el(prefix+'GasState').textContent=gas.status;
+  const dial=el(prefix+'Dial');dial.classList.toggle('ready',ok);
+  dial.setAttribute('aria-label',ok?ariaName+' '+fmt(avg,2)+' '+unit+(delayed?' (data tertunda)':'') :ariaName+' menunggu kedua alat');
+  el(prefix+'Dot').classList.toggle('on',ok&&!delayed);
+  el(prefix+'Status').textContent=!ok?'MENUNGGU DATA VALID DARI PM DAN GAS':delayed?'DATA TERTUNDA / SINKRONISASI SD':'LIVE / RATA-RATA PM + GAS';
+}
+function renderClimate(){
+  const pm=latestClimatePacket('pm'),gas=latestClimatePacket('gas');
+  updateClimateWidget('climateTemp',climateMetric(pm,'suhu',-40,125),climateMetric(gas,'suhu_c',-40,125),'°C','Suhu rata-rata');
+  updateClimateWidget('climateHum',climateMetric(pm,'kelembapan',0,100),climateMetric(gas,'rh_pct',0,100),'%','Kelembapan rata-rata');
+}
+
+// REV8 - MA hanya diterapkan di browser. Tidak mengubah rows, API, atau file CSV.
+let graphWindow=1; // 1 = Data Asli; 10,20,50,100 = jumlah sampel dalam Moving Average.
+function graphSeries(samples,key,period){
+  if(period===1)return samples.map(r=>{
+    const value=r.measurements?.[key];
+    return typeof value==='number'&&Number.isFinite(value)?value:null;
+  });
+  const result=[];
+  const buffer=[];
+  let sum=0;
+  for(const row of samples){
+    const value=row.measurements?.[key];
+    if(typeof value!=='number'||!Number.isFinite(value)){
+      // Celah data: jangan membuat rata-rata menyeberangi pembacaan yang hilang.
+      buffer.length=0;sum=0;result.push(null);continue;
+    }
+    buffer.push(value);sum+=value;
+    if(buffer.length>period)sum-=buffer.shift();
+    result.push(buffer.length===period?sum/period:null);
+  }
+  return result;
+}
+function graph(card){
+  const canvas=card.querySelector('canvas'),ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect();
+  const w=Math.max(rect.width,150),h=Math.max(rect.height,130),scale=window.devicePixelRatio||1;
+  canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,w,h);
+  const keys=card.dataset.pair.split(','),samples=rows.filter(r=>r.device_type===card.dataset.type);
+  const data=samples.slice(-150);
+  // Hitung sebelum dipangkas menjadi 150 titik agar 10/20 titik pertama tetap punya histori.
+  const series=keys.map(k=>graphSeries(samples,k,graphWindow).slice(-150));
+  const vals=series.flatMap(values=>values.filter(v=>typeof v==='number'&&Number.isFinite(v)));
+  const left=42,right=11,top=9,bottom=26,pw=w-left-right,ph=h-top-bottom;
+  const min=vals.length?Math.min(...vals):0,max=vals.length?Math.max(...vals):10;
+  let lo=Math.max(0,min-(max-min||1)*.16),hi=max+(max-min||1)*.16;if(hi<=lo)hi=lo+1;
+  ctx.font='10px Arial';ctx.textAlign='right';ctx.fillStyle=document.body.dataset.theme==='dark'?'#e7d6ff':'#55436a';ctx.lineWidth=1;
+  for(let k=0;k<=3;k++){const y=top+ph*k/3;ctx.strokeStyle=document.body.dataset.theme==='dark'?'#504166':'#e2d5ef';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(fmt(hi-(hi-lo)*k/3,1),left-6,y+3)}
+  const colors=document.body.dataset.theme==='dark'?['#c69aff','#ff83be']:['#7123df','#ff4788'];
+  series.forEach((values,idx)=>{
+    ctx.lineWidth=2.4;ctx.strokeStyle=colors[idx];ctx.beginPath();let connected=false;
+    values.forEach((v,i)=>{
+      if(typeof v!=='number'||!Number.isFinite(v)){connected=false;return}
+      const x=left+i/(Math.max(1,data.length-1))*pw,y=top+(hi-v)/(hi-lo)*ph;
+      connected?ctx.lineTo(x,y):ctx.moveTo(x,y);connected=true;
+    });ctx.stroke();
+  });
+  ctx.fillStyle=document.body.dataset.theme==='dark'?'#d7c1f4':'#4b2e70';ctx.textAlign='center';
+  const desc=graphWindow===1?'Data asli':`MA ${graphWindow}`;
+  ctx.fillText(data.length?`${desc} · ${data.length} pembacaan terakhir`:'MENUNGGU DATA SENSOR...',left+pw/2,h-5);
+  // Nilai digital utama tetap nilai ASLI paling baru, meski grafik memakai MA.
+  const recent=[...samples].reverse().find(r=>keys.some(k=>typeof r.measurements?.[k]==='number'));
+  const numbers=recent?keys.map(k=>recent.measurements[k]).filter(v=>typeof v==='number'&&Number.isFinite(v)):[];
+  card.querySelector('.metricval').textContent=numbers.length?fmt(numbers.reduce((a,b)=>a+b,0)/numbers.length):'—';
+}
+function setGraphMode(windowSize){
+  if(![1,10,20,50,100].includes(windowSize))return;
+  graphWindow=windowSize;
+  el('graphMode').value=String(windowSize);
+  el('graphDescription').textContent=windowSize===1
+    ?'DATA ASLI — grafik menampilkan pembacaan sensor tanpa perataan. Angka besar, database, dan CSV selalu menggunakan data asli.'
+    :`MA ${windowSize} — setiap titik adalah rata-rata ${windowSize} pembacaan valid berturut-turut (butuh minimal ${windowSize} pembacaan). Hanya garis grafik berubah; angka besar, database, dan CSV tetap data asli.`;
+  cards.forEach(graph);
+}
+function renderSessions(ss){
+  const t=el('sessions');t.replaceChildren();
+  if(!ss.length){const tr=t.insertRow(),td=tr.insertCell();td.colSpan=6;td.className='empty';td.textContent='Belum ada sesi Record';return}
+  ss.forEach(s=>{
+    const tr=t.insertRow();
+    const mode=s.duration_seconds?('Otomatis '+fmt(s.duration_seconds,0)+' detik'):'Manual';
+    const columns=[s.id,s.name||('(sesi lama #'+s.id+')'),mode,s.started_at,s.stopped_at||'● RECORDING'];
+    columns.forEach(value=>{const td=tr.insertCell();td.textContent=value});
+    const td=tr.insertCell(),link=document.createElement('a');
+    link.href='/api/download/session?id='+encodeURIComponent(s.id);link.textContent='Download CSV';td.appendChild(link);
+  });
+}
+let currentSession=null;
+let requestBusy=false,refreshBusy=false;
+function clockText(ms){
+  const total=Math.max(0,Math.floor(ms/1000)),h=Math.floor(total/3600),m=Math.floor(total/60)%60,s=total%60;
+  return h?`${h}j ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}d`:`${String(Math.floor(total/60)).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function updateDurationVisibility(){el('customDuration').hidden=el('durationMode').value!=='custom'}
+function intendedDuration(){
+  const mode=el('durationMode').value;
+  if(mode==='manual')return null;
+  if(mode!=='custom')return Number(mode);
+  const amount=Number(el('customNumber').value),unit=Number(el('customUnit').value),seconds=amount*unit;
+  if(!Number.isInteger(amount)||amount<1||!Number.isSafeInteger(seconds)||seconds>604800){throw Error('Durasi custom harus bilangan bulat, maksimal 7 hari')}
+  return seconds;
+}
+function updateClock(){
+  if(!currentSession){el('elapsed').textContent='00:00';el('remaining').textContent='Tidak sedang merekam';return}
+  const started=Date.parse(currentSession.started_at),stop=currentSession.scheduled_stop_at?Date.parse(currentSession.scheduled_stop_at):null;
+  const now=Date.now();el('elapsed').textContent=clockText(now-started);
+  el('remaining').textContent=stop?'Sisa waktu: '+clockText(stop-now):'Mode manual — tekan STOP untuk mengakhiri';
+}
+function syncActiveUI(state){
+  currentSession=state.active_session;
+  el('nSession').textContent=currentSession?'#'+currentSession.id:'—';
+  el('recStatus').classList.toggle('live',state.recording);
+  el('recStatus').textContent=state.recording?'● RECORDING / #'+currentSession.id:'■ STOPPED / DATABASE ACTIVE';
+  el('activeName').textContent=currentSession?currentSession.name:'Belum ada sesi aktif';
+  el('activeLabel').textContent=currentSession?(currentSession.label||'(tanpa label)'):'—';
+  el('sessionRows').textContent=state.recording?fmt(state.session_rows,0)+' paket sensor tersimpan':'Rekaman belum berjalan';
+  el('start').disabled=requestBusy||state.recording;
+  el('stop').disabled=requestBusy||!state.recording;
+  el('applyLabel').disabled=requestBusy||!state.recording;
+  ['sessionName','durationMode','customNumber','customUnit'].forEach(id=>el(id).disabled=state.recording||requestBusy);
+  el('sessionDownload').href=state.sessions.length?'/api/download/session?id='+state.sessions[0].id:'#';
+  el('sessionDownload').style.opacity=state.sessions.length?'1':'.5';
+  updateClock();
+}
+async function refresh(){
+  if(refreshBusy)return;
+  refreshBusy=true;
+  try{
+    const [ra,rb]=await Promise.all([fetch('/api/status',{cache:'no-store'}),fetch('/api/live?limit=800',{cache:'no-store'})]);
+    if(!ra.ok||!rb.ok)throw Error('Server tidak dapat dijangkau');
+    const a=await ra.json(),b=await rb.json();rows=b.records;
+    el('nTotal').textContent=fmt(a.counts.total,0);
+    el('nPM').textContent=fmt(a.counts.pm,0);
+    el('nGas').textContent=fmt(a.counts.gas,0);
+    markStatus('pmDot','pmStatus',a.recent.pm);
+    markStatus('gasDot','gasStatus',a.recent.gas);
+    syncActiveUI(a);renderSessions(a.sessions);cards.forEach(graph);renderClimate();
+    el('serverDot').classList.add('on');
+  }catch(error){
+    el('error').textContent='Gagal mengambil data dari server laptop: '+error.message;
+    el('serverDot').classList.remove('on');
+  }finally{refreshBusy=false}
+}
+async function act(which){
+  if(requestBusy)return;
+  requestBusy=true;
+  el('start').disabled=el('stop').disabled=el('applyLabel').disabled=true;
+  try{
+    let body={};
+    if(which==='start')body={name:el('sessionName').value.trim(),label:el('labelInput').value.trim(),duration_seconds:intendedDuration()};
+    else if(which==='label')body={label:el('labelInput').value.trim()};
+    const response=await fetch('/api/record/'+which,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const answer=await response.json();
+    if(!response.ok||!answer.ok)throw Error(answer.error||'Tindakan gagal');
+    el('error').textContent=which==='label'?'Label diterapkan: '+(body.label||'(kosong)'):which==='start'?'Recording dimulai':'Recording dihentikan';
+  }catch(error){el('error').textContent=error.message}
+  finally{requestBusy=false;await refresh()}
+}
+
+// REV9: menu navigation, theme preference and localhost-only destructive action.
+function switchPage(page){
+  const target=page==='history'?'dashboard':page;
+  document.querySelectorAll('[data-page]').forEach(n=>n.classList.toggle('page-active',n.dataset.page===target));
+  document.querySelectorAll('[data-nav]').forEach(n=>{n.classList.toggle('active',n.dataset.nav===page);n.setAttribute('aria-current',n.dataset.nav===page?'page':'false')});
+  window.scrollTo({top:0,behavior:'instant'});
+  if(page==='history')el('historyPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  if(target==='dashboard')requestAnimationFrame(()=>cards.forEach(graph));
+}
+function setTheme(theme){
+  if(!['light','dark'].includes(theme))return;
+  document.body.dataset.theme=theme;
+  document.querySelectorAll('[data-theme-choice]').forEach(n=>{const sel=n.dataset.themeChoice===theme;n.classList.toggle('selected',sel);n.setAttribute('aria-pressed',sel?'true':'false')});
+  try{localStorage.setItem('ek-hub-theme',theme)}catch(_){}
+  requestAnimationFrame(()=>cards.forEach(graph));
+}
+try{setTheme(localStorage.getItem('ek-hub-theme')==='dark'?'dark':'light')}catch(_){setTheme('light')}
+document.querySelectorAll('[data-nav]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.nav)));
+document.querySelectorAll('[data-go]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.go)));
+document.querySelectorAll('[data-theme-choice]').forEach(n=>n.addEventListener('click',()=>setTheme(n.dataset.themeChoice)));
+const localhost=new Set(['localhost','127.0.0.1','::1']).has(location.hostname);
+if(!localhost){el('deleteButton').disabled=true;el('deleteStatus').textContent='Untuk menghapus data, buka http://localhost:8787 pada laptop server.'}
+el('deleteButton').addEventListener('click',async()=>{
+  const confirmation=el('deleteConfirm').value.trim();
+  const password=el('deletePassword').value;
+  if(confirmation!=='HAPUS SEMUA'||!el('deleteCheck').checked){el('deleteStatus').textContent='Ketik HAPUS SEMUA dan centang persetujuan terlebih dahulu.';return}
+  if(!password){el('deleteStatus').textContent='Masukkan password administrator lokal.';return}
+  if(!window.confirm('HAPUS PERMANEN seluruh data lokal SQLite dan CSV sesi? Data tidak dapat dipulihkan.'))return;
+  el('deleteButton').disabled=true;
+  try{
+    const response=await fetch('/api/admin/clear-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password,confirmation})});
+    const result=await response.json();
+    if(!response.ok||!result.ok)throw Error(result.error||'Penghapusan gagal');
+    el('deleteStatus').textContent=`Terhapus: ${result.removed_readings} pembacaan dan ${result.removed_sessions} sesi.`;
+    el('deletePassword').value='';el('deleteConfirm').value='';el('deleteCheck').checked=false;
+    await refresh();
+  }catch(err){el('deleteStatus').textContent=String(err.message||err)}
+  finally{el('deleteButton').disabled=!localhost}
+});
+
+el('graphMode').addEventListener('change',event=>setGraphMode(Number(event.target.value)));
+el('durationMode').addEventListener('change',updateDurationVisibility);
+el('start').addEventListener('click',()=>act('start'));
+el('stop').addEventListener('click',()=>act('stop'));
+el('applyLabel').addEventListener('click',()=>act('label'));
+window.addEventListener('resize',()=>cards.forEach(graph));
+updateDurationVisibility();
+digitalNumber("climateTempDigits","--.--");
+digitalNumber("climateHumDigits","--.--");
+refresh();
+setInterval(refresh,1000);
+setInterval(updateClock,250);
+</script></body></html>
