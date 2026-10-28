@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EK Instrumentation — Air Quality Hub / REV13</title><meta name="ek-ui-version" content="EK_UI_REV13"><link rel="icon" type="image/x-icon" href="/favicon.ico">
+<title>EK Instrumentation — Air Quality Hub / REV15</title><meta name="ek-ui-version" content="EK_UI_REV15"><link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
 :root{--bg:#e8dcff;--ink:#150527;--dark:#270b48;--purple:#7026dc;--purple2:#ae79ff;--purple3:#d7bcff;--white:#fffaff;--mint:#c0ffd9;--border:3px solid var(--ink)}
 *[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.3}h1,h2,h3,p{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{max-width:1490px;margin:0 auto;padding:24px}
@@ -220,28 +220,70 @@ body[data-theme="modern-dark"] .currentlabel,body[data-theme="midnight"] .curren
 body[data-theme="modern-dark"] .chip,body[data-theme="midnight"] .chip{background:var(--white);color:var(--ink)}
 @media(max-width:760px){.layout.sidebar-collapsed{display:block}.sidebar-collapsed .sidebar{padding:14px;gap:7px}.sidebar-collapsed .brand-long,.sidebar-collapsed .nav-text{display:inline}.sidebar-collapsed .sidecaption,.sidebar-collapsed .sidefooter{display:none}.sidebar-collapsed .sidenav{flex-direction:row;flex-wrap:wrap}.sidebar-collapsed .navbtn{flex:1 1 110px;justify-content:flex-start;padding:10px 8px}.sidebar-header{display:none}}
 @media(max-width:550px){.theme-choice{grid-template-columns:1fr}.chart-modal{padding:9px}.chart-modal-box{padding:14px;max-height:98vh}.chart-modal-canvas{height:48vh;min-height:230px}.modal-close{padding:9px}}
+/* REV15: cat-logo sidebar + record merged into dashboard */
+.sidebar{background:linear-gradient(180deg,#24073f 0%,#19072c 42%,#10051c 100%);border-right:1px solid rgba(255,255,255,.16);box-shadow:14px 0 40px rgba(10,0,30,.24)}
+.sidebar-header{align-items:center;gap:10px}
+.brandbox.brandmark{display:grid;place-items:center;min-height:116px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:none}
+.catbadge{width:92px;height:92px;border-radius:26px;display:grid;place-items:center;background:linear-gradient(180deg,#9d62eb 0%,#6a28d9 100%);color:#fff;border:3px solid rgba(255,255,255,.18);box-shadow:0 12px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.2)}
+.catbadge svg{width:66px;height:66px;display:block}
+.side-toggle{border-radius:14px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);backdrop-filter:blur(8px);box-shadow:none}
+.side-toggle:hover{background:rgba(255,255,255,.18)}
+.sidecaption{margin-top:6px;color:#c9b8f2;letter-spacing:2.2px}
+.sidenav{gap:9px}
+.navbtn{border:1px solid transparent;border-radius:16px;padding:13px 12px;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.navbtn:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.08);transform:translateX(2px)}
+.navbtn.active{background:rgba(233,216,255,.98);border-color:#f7f0ff;box-shadow:none;color:#220a3d}
+.nav-icon{font-size:18px}
+.sidefooter{border-top:1px solid rgba(255,255,255,.14);color:#ddcff8}
+.layout.sidebar-collapsed{grid-template-columns:90px minmax(0,1fr)}
+.sidebar-collapsed .brandbox.brandmark{padding:8px;min-height:86px}
+.sidebar-collapsed .catbadge{width:58px;height:58px;border-radius:18px}
+.sidebar-collapsed .catbadge svg{width:40px;height:40px}
+.sidebar-collapsed .navbtn{border-radius:14px}
+.page-intro.compact{margin:12px 0 16px}
+.dashboard-recgrid{margin-bottom:22px}
+.dashboard-recgrid .controlcard{min-height:100%}
+.dashboard-recgrid .controlcard:first-child{border-top:6px solid var(--purple)}
+.dashboard-recgrid .controlcard:nth-child(2){border-top:6px solid #ff4788}
+.dashboard-recgrid .controlcard:nth-child(3){border-top:6px solid #2aa88f}
+#samplingPanel{scroll-margin-top:18px}
+body[data-theme="modern-light"] .brandbox.brandmark,body[data-theme="modern-dark"] .brandbox.brandmark,body[data-theme="scientific"] .brandbox.brandmark,body[data-theme="midnight"] .brandbox.brandmark{background:color-mix(in srgb,var(--white) 88%, transparent);border:var(--border)}
+body[data-theme="modern-light"] .catbadge,body[data-theme="modern-dark"] .catbadge,body[data-theme="scientific"] .catbadge,body[data-theme="midnight"] .catbadge{background:linear-gradient(180deg,var(--purple) 0%,color-mix(in srgb,var(--purple) 58%, #000 42%) 100%);border-color:color-mix(in srgb,var(--purple2) 55%, #fff 45%)}
+body[data-theme="dark"] .brandbox.brandmark{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
+@media(max-width:760px){.brandbox.brandmark{display:grid!important;min-height:82px}.catbadge{width:64px;height:64px;border-radius:18px}.catbadge svg{width:42px;height:42px}.sidecaption{display:block}.dashboard-recgrid{grid-template-columns:1fr}.page-toolbar{margin-top:10px}}
+
 </style></head>
 <body data-theme="light"><div class="layout">
 <aside class="sidebar" aria-label="Navigasi aplikasi" id="appSidebar">
   <div class="sidebar-header">
-    <div class="brandbox"><strong>EK<span class="brand-long" style="font-size:13px"> / INSTRUMENTATION</span></strong><span class="brand-long">AIR QUALITY HUB</span></div>
+    <div class="brandbox brandmark" title="Air Quality Hub" aria-label="Air Quality Hub">
+      <div class="catbadge" aria-hidden="true">
+        <svg viewBox="0 0 96 96" role="img" aria-hidden="true">
+          <path d="M23 33 17 16 35 26m38 7 6-17-18 10" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M48 79c20 0 33-12 33-28 0-17-13-30-33-30S15 34 15 51c0 16 13 28 33 28Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M37 49c0 2-1 4-3 4s-3-2-3-4 1-4 3-4 3 2 3 4Zm28 0c0 2-1 4-3 4s-3-2-3-4 1-4 3-4 3 2 3 4Z" fill="currentColor"/>
+          <path d="M48 55c-4 0-7 2-7 5 0 2 2 4 7 4s7-2 7-4c0-3-3-5-7-5Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M18 53h13m-13 8h15m47-8H67m15 8H67" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
     <button type="button" class="side-toggle" id="sidebarToggle" aria-label="Perkecil sidebar" aria-expanded="true" title="Perkecil sidebar">☰</button>
   </div>
   <div class="sidecaption">WORKSPACE / MENU</div>
   <nav class="sidenav" aria-label="Menu utama">
     <button type="button" class="navbtn active" data-nav="dashboard" title="Dashboard" aria-label="Dashboard"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-text">DASHBOARD</span></button>
-    <button type="button" class="navbtn" data-nav="record" title="Record & Label" aria-label="Record dan Label"><span class="nav-icon" aria-hidden="true">●</span><span class="nav-text">RECORD &amp; LABEL</span></button>
     <button type="button" class="navbtn" data-nav="history" title="Riwayat" aria-label="Riwayat"><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-text">RIWAYAT</span></button>
     <button type="button" class="navbtn" data-nav="downloads" title="Ekspor Data" aria-label="Ekspor Data"><span class="nav-icon" aria-hidden="true">⇩</span><span class="nav-text">EKSPOR DATA</span></button>
     <button type="button" class="navbtn" data-nav="settings" title="Pengaturan" aria-label="Pengaturan"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-text">PENGATURAN</span></button>
   </nav>
-  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV13</div>
+  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV15</div>
 </aside>
-<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV13</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
+<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV15</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
 <div class="status"><span class="chip"><i id="pmDot" class="dot"></i> PM <span id="pmStatus">OFFLINE</span></span><span class="chip"><i id="gasDot" class="dot"></i> GAS <span id="gasStatus">OFFLINE</span></span><span class="chip"><i id="serverDot" class="dot on"></i> LAPTOP ONLINE</span></div></header>
 <section class="summary page-active" data-page="dashboard"><div class="stat"><small>Data masuk / total</small><strong id="nTotal">0</strong></div><div class="stat"><small>Data PM</small><strong id="nPM">0</strong></div><div class="stat"><small>Data gas</small><strong id="nGas">0</strong></div><div class="stat"><small>Sesi saat ini</small><strong id="nSession">—</strong></div></section>
-<div class="page-intro" data-page="record"><h2>Record &amp; Label</h2><p>Mulai, berhenti, atur durasi, dan ubah label tanpa menghentikan sesi.</p></div>
-<section class="recgrid" aria-label="Pengaturan rekaman" data-page="record">
+<div class="page-intro page-active compact" data-page="dashboard"><h2>Dashboard &amp; Sampling</h2><p>Monitoring realtime, sampling/record, dan pelabelan manual kini berada dalam satu halaman.</p></div>
+<section class="recgrid dashboard-recgrid page-active" aria-label="Pengaturan rekaman" data-page="dashboard" id="samplingPanel">
 <article class="controlcard">
   <div class="sectionlabel">01 / Pengaturan Sesi</div>
   <div class="field"><label for="sessionName">Nama sesi rekaman</label><input id="sessionName" maxlength="120" autocomplete="off" placeholder="Contoh: Pengujian Motor A"></div>
@@ -265,7 +307,7 @@ body[data-theme="modern-dark"] .chip,body[data-theme="midnight"] .chip{backgroun
   <p class="microcopy">Dashboard tetap menampilkan data ketika STOP; semua data masuk selalu tersimpan dalam SQLite.</p>
 </article>
 </section>
-<div class="page-toolbar page-active" data-page="dashboard"><strong class="smallpill">LIVE 1 SECOND</strong><button class="quickbutton" type="button" data-go="record">● MULAI REKAMAN / LABEL</button></div>
+<div class="page-toolbar page-active" data-page="dashboard"><strong class="smallpill">LIVE 1 SECOND</strong><button class="quickbutton" type="button" id="jumpSampling">● SAMPLING &amp; RECORD</button></div>
 <div class="sectionhead graphhead page-active" data-page="dashboard">
   <div><h2>6 Grafik Realtime</h2><p>PM1, PM2.5, PM10, CO, CO₂, NO₂</p></div>
   <div class="graph-control">
@@ -655,6 +697,7 @@ el('chartModal').addEventListener('click',e=>{if(e.target===el('chartModal'))clo
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&enlargedCard)closeExpandedChart();if(e.key==='Tab'&&enlargedCard){const nodes=[...el('chartModal').querySelectorAll('button:not([disabled])')];if(nodes.length){const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 document.querySelectorAll('[data-nav]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.nav)));
 document.querySelectorAll('[data-go]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.go)));
+const jumpSampling=el('jumpSampling'); if(jumpSampling) jumpSampling.addEventListener('click',()=>document.getElementById('samplingPanel')?.scrollIntoView({behavior:'smooth',block:'start'}));
 document.querySelectorAll('[data-theme-choice]').forEach(n=>n.addEventListener('click',()=>setTheme(n.dataset.themeChoice)));
 const localhost=new Set(['localhost','127.0.0.1','::1']).has(location.hostname);
 if(!localhost){el('deleteButton').disabled=true;el('deleteStatus').textContent='Untuk menghapus data, buka http://localhost:8787 pada laptop server.'}
