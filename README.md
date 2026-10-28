@@ -62,10 +62,18 @@ http://192.168.1.100:8787/api/ingest
 - **Record:** sesi rekaman dengan nama yang dapat ditentukan, durasi manual atau berhenti otomatis.
 - **Label:** ubah label seperti `RPM1000` → `RPM2000` selama sesi masih berjalan; perubahan berlaku pada pembacaan berikutnya dan masuk ke CSV.
 - **Riwayat & Ekspor:** unduh CSV gabungan berdasarkan waktu pengukuran sensor, CSV per sesi, atau CSV mentah.
-- **Tema:** terang/gelap dengan gaya ungu neo-brutalism.
+- **Tema:** enam pilihan pada **Pengaturan → Tema Tampilan**: Brutal Light, Brutal Dark, Modern Light, Modern Dark, Scientific, dan Midnight. Pilihan tersimpan pada browser.
+- **Sidebar:** klik ikon `☰` untuk mengecilkan sidebar menjadi ikon, atau klik lagi untuk memperbesar. Pilihan tetap diingat di browser.
+- **Grafik popup:** klik tombol `⛶` di kanan judul tiap grafik untuk memperbesar. Grafik terus diperbarui setiap 1 detik dan mengikuti Data Asli / MA yang dipilih. Tutup dengan `✕ TUTUP`, `Esc`, atau klik bagian gelap di luar popup.
 - **Penyimpanan:** SQLite dan ekspor CSV di satu folder `data/`.
 
 **Catatan data:** server menyimpan data yang masuk ke SQLite meskipun tombol Record tidak aktif; tombol Record digunakan untuk menetapkan sesi dan label. Data PM dan Gas pada ekspor gabungan dipasangkan berdasarkan **timestamp pengukuran**, bukan waktu paket tiba. Bila waktunya tidak cocok, sebagian kolom bisa kosong agar tidak memasangkan pembacaan yang salah.
+
+## Update tampilan REV11 (tanpa perubahan firmware)
+
+Untuk pengguna yang sudah menginstal aplikasinya, **hentikan server**, lalu cukup ganti file `index.html` di folder `%LOCALAPPDATA%\EKInstrumentation\LaptopServer`. Mulai lagi aplikasi melalui shortcut, dan tekan `Ctrl+F5` pada browser.
+
+Jika update melalui GitHub, push file `index.html` dan `README.md` dari patch REV11 ke branch `main`, lalu jalankan ulang installer biasa. File `install.ps1` dan `launch.ps1` REV10 tetap digunakan; `data/` tidak ditimpa dan firmware PM/Gas tidak perlu di-flash ulang.
 
 ## Update versi aplikasi
 
@@ -106,15 +114,27 @@ Jika Anda sudah pernah menggunakan REV5–REV8, **backup dulu database dan file 
 
 Jangan langsung menimpa SQLite baru yang sudah berisi pengukuran; ekspor data lama terlebih dahulu atau lakukan migrasi khusus.
 
-## Uninstall
+## Uninstall — Windows (aman untuk data)
 
-Jalankan `uninstall.ps1` dari folder aplikasi yang terinstal:
+1. Jika sesi Record sedang aktif, tekan **STOP** terlebih dahulu.
+2. Tutup jendela PowerShell/terminal yang menjalankan server, lalu tutup tab browser dashboard.
+3. Buka **Windows PowerShell** dan jalankan perintah ini (tidak memerlukan `irm`):
 
 ```powershell
 & "$env:LOCALAPPDATA\EKInstrumentation\LaptopServer\uninstall.ps1"
 ```
 
-Script menghapus shortcut dan berkas program, tetapi **meninggalkan folder `data/`** agar hasil pengukuran tidak hilang.
+Uninstaller menghapus shortcut **EK Air Quality Hub** dari Desktop dan Start Menu serta file program utamanya. **Folder `data/` (SQLite dan CSV) tetap dipertahankan** agar hasil pengukuran tidak hilang. Python yang terpasang di Windows tidak ikut dihapus.
+
+Jika Anda **juga ingin menghapus semua data pengukuran lokal**, pastikan data sudah diekspor dan dicadangkan terlebih dahulu. Setelah server berhenti dan uninstaller dijalankan, barulah jalankan perintah opsional berikut:
+
+```powershell
+Remove-Item -LiteralPath "$env:LOCALAPPDATA\EKInstrumentation\LaptopServer\data" -Recurse -Force
+```
+
+**PERINGATAN:** Perintah kedua menghapus permanen database, riwayat, serta CSV lokal. Perintah tersebut tidak diperlukan untuk uninstall biasa. Data pada SD card ESP32 serta Supabase tidak ikut dihapus.
+
+Jika file `uninstall.ps1` belum ada karena instalasi yang sangat lama, unduh versi terbaru dari repository atau salin `uninstall.ps1` ke folder aplikasi tersebut terlebih dahulu.
 
 ---
 
