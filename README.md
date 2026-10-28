@@ -14,24 +14,35 @@
 **Aplikasi monitoring kualitas udara berbasis laptop** untuk menerima dan menyatukan data dari dua perangkat ESP32 independen: **Particulate Matter (PM)** dan **Gas**. Dashboard bekerja di jaringan lokal, menampilkan pembacaan realtime, dan menyediakan pencatatan terstruktur untuk pengujian serta analisis data.
 
 **Platform:** Windows 10/11 · **Runtime:** Python 3.9+ · **Server:** HTTP port `8787` · **Penyimpanan:** SQLite + CSV lokal
+
+
 ## Galeri Dashboard
 
 <p align="center">
   <a href="assets/github/ss1.png">
-    <img src="assets/github/ss1.png" width="100%" />
+    <img src="assets/github/ss1.png" width="100%" alt="Dashboard Air Quality Hub" />
   </a>
+</p>
+<p align="center">
+  <strong>Gambar 1.</strong> Dashboard utama EK Air Quality Hub.
 </p>
 
 <p align="center">
   <a href="assets/github/ss2.png">
-    <img src="assets/github/ss2.png" width="100%" />
+    <img src="assets/github/ss2.png" width="100%" alt="Grafik Monitoring" />
   </a>
+</p>
+<p align="center">
+  <strong>Gambar 2.</strong> Visualisasi grafik realtime parameter PM dan gas.
 </p>
 
 <p align="center">
   <a href="assets/github/ss3.png">
-    <img src="assets/github/ss3.png" width="100%" />
+    <img src="assets/github/ss3.png" width="100%" alt="Temperature and Humidity" />
   </a>
+</p>
+<p align="center">
+  <strong>Gambar 3.</strong> Monitoring suhu dan kelembapan rata-rata dari kedua perangkat.
 </p>
 
 ## Instalasi cepat
