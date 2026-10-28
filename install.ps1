@@ -1,7 +1,7 @@
-﻿# EK Instrumentation Laptop Server - GitHub one-line installer for Windows
+# EK Instrumentation Laptop Server - GitHub one-line installer for Windows
 # Repository: https://github.com/efendiyhy/pmgas-merge
 # Install from trusted public repository:
-# irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
+# $s = irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1; iex ($s.TrimStart([char]0xFEFF))
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -18,7 +18,7 @@ $Data = Join-Path $Install 'data'
 $Temp = Join-Path $env:TEMP ('EKLaptopServerInstall_' + [guid]::NewGuid().ToString('N'))
 Write-Host ''
 Write-Host '========================================' -ForegroundColor Magenta
-Write-Host ' EK INSTRUMENTATION / LAPTOP SERVER REV13' -ForegroundColor White
+Write-Host ' EK INSTRUMENTATION / LAPTOP SERVER REV16' -ForegroundColor White
 Write-Host '========================================' -ForegroundColor Magenta
 Write-Host ('Repository: ' + $Repository)
 
@@ -107,16 +107,21 @@ try {
     if (-not $Source -or -not (Test-Path (Join-Path $Source.FullName 'server.py')) -or -not (Test-Path (Join-Path $Source.FullName 'index.html'))) {
         throw 'Isi repo tidak sesuai: server.py dan index.html harus berada di folder root repo.'
     }
-    # REV13: fail explicitly if GitHub still contains the old index.html.
-    # Prevents a misleading successful reinstall that leaves old themes/sidebar.
+    # Verify UI capabilities rather than requiring one exact revision.
+    # Current UI REV15 (cat sidebar & sampling integrated) and REV13 remain supported.
     $UIFile = Join-Path $Source.FullName 'index.html'
     $UIContent = [System.IO.File]::ReadAllText($UIFile)
-    foreach ($required in @('EK_UI_REV13', 'id="sidebarToggle"', 'id="chartModal"', 'data-theme-choice="modern-dark"')) {
+    $UIMatch = [regex]::Match($UIContent, 'EK_UI_REV([0-9]+)')
+    if (-not $UIMatch.Success -or [int]$UIMatch.Groups[1].Value -lt 13) {
+        throw 'index.html pada GitHub terlalu lama. Upload dashboard REV15 ke branch main sebelum instal ulang.'
+    }
+    foreach ($required in @('id="sidebarToggle"', 'id="chartModal"', 'data-theme-choice="modern-dark"')) {
         if (-not $UIContent.Contains($required)) {
-            throw 'index.html di GitHub masih versi lama! Push index.html REV13 bersama install.ps1 dan launch.ps1 ke branch main, lalu jalankan irm ulang.'
+            throw ('index.html GitHub tidak memiliki fitur wajib: ' + $required)
         }
     }
-    Write-Host '  Dashboard EK UI REV13 terverifikasi (sidebar / tema / grafik popup).' -ForegroundColor Green
+    $UIVersion = 'REV' + $UIMatch.Groups[1].Value
+    Write-Host ('  Dashboard EK UI ' + $UIVersion + ' terverifikasi (sidebar / tema / grafik popup).') -ForegroundColor Green
     Write-Host '[2/4] Memasang aplikasi (folder data lama dipertahankan)...' -ForegroundColor Cyan
     # Stop ONLY this app's existing Python process, so an update is activated on next launch.
     $appScriptPath = Join-Path $Install 'server.py'
@@ -133,8 +138,8 @@ try {
     }
     # Verify bytes were copied to the installed application (not just downloaded).
     $LocalUI = Join-Path $Install 'index.html'
-    if (-not (Test-Path -LiteralPath $LocalUI) -or -not ([System.IO.File]::ReadAllText($LocalUI)).Contains('EK_UI_REV13')) {
-        throw 'Gagal memasang index.html REV13 ke folder aplikasi. Tutup server dan ulangi instalasi.'
+    if (-not (Test-Path -LiteralPath $LocalUI) -or -not ([System.IO.File]::ReadAllText($LocalUI)).Contains('EK_UI_' + $UIVersion)) {
+        throw ('Gagal memasang index.html ' + $UIVersion + ' ke folder aplikasi. Tutup server dan ulangi instalasi.')
     }
     Write-Host ('  Tampilan baru terpasang: ' + $LocalUI) -ForegroundColor Green
     New-Item -ItemType Directory -Force -Path (Join-Path $Install 'assets') | Out-Null
@@ -173,7 +178,7 @@ try {
     Write-Host ('Database dan CSV: ' + $Data)
     Write-Host 'Port: 8787 | ESP endpoint: http://IP-LAPTOP:8787/api/ingest'
     Write-Host 'Klik shortcut: terminal server akan muncul dan dashboard otomatis terbuka.'
-    Write-Host 'Tampilan REV13: buka PENGATURAN untuk tema, ☰ untuk sidebar, ⛶ untuk grafik.' -ForegroundColor Magenta -ForegroundColor White
+    Write-Host ('Tampilan ' + $UIVersion + ': buka PENGATURAN untuk tema, tombol menu untuk sidebar, dan tombol perbesar untuk grafik.') -ForegroundColor Magenta
     Write-Host 'Untuk STOP SERVER: tekan Ctrl+C atau tutup terminal yang muncul.' -ForegroundColor Yellow
 } finally {
     if (Test-Path $Temp) { Remove-Item -LiteralPath $Temp -Recurse -Force -ErrorAction SilentlyContinue }
