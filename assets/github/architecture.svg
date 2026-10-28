@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Alur data perangkat PM dan Gas ke laptop dan penyimpanan lokal">
+ <rect width="1200" height="420" rx="20" fill="#0E1427"/>
+ <text x="34" y="50" font-size="26" font-weight="800" fill="white" font-family="Arial,sans-serif">ARSITEKTUR SISTEM</text>
+ <text x="34" y="76" font-size="15" fill="#BDBDD4" font-family="Arial,sans-serif">Dua alat independen. Laptop menyatukan data berdasarkan waktu pengukuran.</text>
+ <rect x="34" y="111" width="252" height="92" rx="18" fill="#191B32" stroke="#A66CF5" stroke-width="2"/>
+ <rect x="50" y="128" width="7" height="20" rx="3" fill="#A66CF5"/>
+ <text x="68" y="146" font-family="Arial,sans-serif" font-size="21" fill="#FFFFFF" font-weight="750">ESP32 PM</text>
+ <text x="51" y="173" font-family="Arial,sans-serif" font-size="14" fill="#C9CDE3">2× PMS5003T + SHT31</text>
+ <rect x="34" y="235" width="252" height="92" rx="18" fill="#191B32" stroke="#EE80BC" stroke-width="2"/>
+ <rect x="50" y="252" width="7" height="20" rx="3" fill="#EE80BC"/>
+ <text x="68" y="270" font-family="Arial,sans-serif" font-size="21" fill="#FFFFFF" font-weight="750">ESP32 GAS</text>
+ <text x="51" y="297" font-family="Arial,sans-serif" font-size="14" fill="#C9CDE3">MH-Z19C + MiCS-4514</text>
+ <rect x="364" y="170" width="205" height="92" rx="18" fill="#191B32" stroke="#5DD5CD" stroke-width="2"/>
+ <rect x="380" y="187" width="7" height="20" rx="3" fill="#5DD5CD"/>
+ <text x="398" y="205" font-family="Arial,sans-serif" font-size="21" fill="#FFFFFF" font-weight="750">Wi-Fi / LAN</text>
+ <text x="381" y="232" font-family="Arial,sans-serif" font-size="14" fill="#C9CDE3">Jaringan yang sama</text>
+ <rect x="649" y="170" width="227" height="92" rx="18" fill="#191B32" stroke="#A66CF5" stroke-width="2"/>
+ <rect x="665" y="187" width="7" height="20" rx="3" fill="#A66CF5"/>
+ <text x="683" y="205" font-family="Arial,sans-serif" font-size="21" fill="#FFFFFF" font-weight="750">Laptop Server</text>
+ <text x="666" y="232" font-family="Arial,sans-serif" font-size="14" fill="#C9CDE3">Port 8787 · API ingest</text>
+ <rect x="946" y="170" width="214" height="92" rx="18" fill="#191B32" stroke="#6BD3AA" stroke-width="2"/>
+ <rect x="962" y="187" width="7" height="20" rx="3" fill="#6BD3AA"/>
+ <text x="980" y="205" font-family="Arial,sans-serif" font-size="21" fill="#FFFFFF" font-weight="750">SQLite + CSV</text>
+ <text x="963" y="232" font-family="Arial,sans-serif" font-size="14" fill="#C9CDE3">Rekaman dan ekspor</text>
+ <g fill="none" stroke="#B9A5EF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M286 157H321V199H364"/><path d="M286 281H321V232H364"/><path d="M569 216H649"/><path d="M876 216H946"/>
+ </g>
+ <g fill="#B9A5EF"><path d="m355 199 10-6v12Z"/><path d="m355 232 10-6v12Z"/><path d="m641 216 10-6v12Z"/><path d="m938 216 10-6v12Z"/></g>
+ <rect x="34" y="359" width="1126" height="38" rx="12" fill="#252340"/>
+ <text x="52" y="384" fill="#E1D3FD" font-size="14" font-family="Arial,sans-serif">Saat Wi-Fi tidak tersedia: ESP tetap memonitor; microSD dapat menyimpan backlog jika terpasang. Supabase opsional.</text>
+ </svg>
