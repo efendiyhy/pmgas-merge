@@ -1,205 +1,149 @@
-# EK Air Quality Hub — REV13
+**Website resmi:** [**EK Instrumentation — ek-instrumentation.com**](https://ek-instrumentation.com)
 
-**Laptop Server — Monitoring PM & Gas**  
-By **EK Instrumentation** | Windows 10/11 | Python 3.9+ | Port `8787`
+<p align="center">
+  <img src="assets/github/hero.svg" alt="EK Instrumentation Air Quality Hub — Laptop Server" width="100%" />
+</p>
 
-Dashboard lokal untuk menggabungkan data dari **dua alat ESP32 yang berbeda**: alat particulate matter (PM) dan alat monitoring gas. Keduanya mengirim data melalui Wi-Fi/LAN yang sama ke aplikasi di laptop. Aplikasi ini bukan firmware ESP32 dan tidak perlu diunggah melalui Arduino IDE.
+<p align="center">
+  <a href="https://github.com/efendiyhy/pmgas-esp32-firmware">ESP32 Firmware Installer</a> ·
+  <a href="https://ek-instrumentation.com">Company Website</a>
+</p>
 
-> **Repository resmi:** https://github.com/efendiyhy/pmgas-merge
+# EK Air Quality Hub — Laptop Server
 
+**Aplikasi monitoring kualitas udara berbasis laptop** untuk menerima dan menyatukan data dari dua perangkat ESP32 independen: **Particulate Matter (PM)** dan **Gas**. Dashboard bekerja di jaringan lokal, menampilkan pembacaan realtime, dan menyediakan pencatatan terstruktur untuk pengujian serta analisis data.
 
-## PENTING: Perbaikan tampilan tidak muncul setelah REV12
+**Platform:** Windows 10/11 · **Runtime:** Python 3.9+ · **Server:** HTTP port `8787` · **Penyimpanan:** SQLite + CSV lokal
 
-REV12 **hanya** memperbarui launcher terminal (`install.ps1`, `launch.ps1`, README), **tanpa membawa `index.html` versi REV11**. Karena installer selalu mengambil isi branch GitHub `main`, apabila `index.html` versi baru belum di-push, instalasi ulang tetap menampilkan antarmuka lama.
+## Instalasi cepat
 
-**REV13 menyatukan keempat file** `index.html`, `install.ps1`, `launch.ps1`, `README.md`. Installer sekarang **menolak melanjutkan instalasi** jika file HTML yang diunduh masih versi lama, dan memeriksa bahwa HTML baru benar-benar tersalin ke folder aplikasi. Database dan CSV dalam `data/` tetap dipertahankan.
-
-### Cara update GitHub (wajib sebelum irm)
-
-1. Ekstrak paket REV13 dan salin **keempat file** ke ROOT repository `efendiyhy/pmgas-merge` (sejajar dengan `server.py`).
-2. Dari folder repository, jalankan:
-
-```powershell
-git add index.html install.ps1 launch.ps1 README.md
-git commit -m "REV13 fix themes sidebar and popup deployment"
-git push origin main
-```
-
-3. Cek GitHub: buka `https://github.com/efendiyhy/pmgas-merge/blob/main/index.html` dan cari `EK_UI_REV13`. Jika belum ada, jangan lanjut ke installer.
-4. Stop Record dahulu jika aktif; tutup terminal server lama; lalu jalankan:
+Buka **Windows PowerShell**, kemudian jalankan:
 
 ```powershell
 irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
 ```
 
-5. Buka shortcut **EK Air Quality Hub**, kemudian buka `http://localhost:8787/?ui=REV13` dan tekan `Ctrl+F5`. Judul logo harus memuat **EK INSTRUMENTATION · UI REV13**. Masuk **Pengaturan** untuk melihat 6 tema; tombol **☰** pada sidebar untuk memperkecil; dan **⛶** pada setiap grafik untuk popup.
+Installer mengunduh versi aplikasi dari repository, menyiapkan Python jika diperlukan, dan membuat shortcut **EK Air Quality Hub** di Desktop/Start Menu. Internet diperlukan saat instalasi; pengukuran melalui LAN tidak memerlukan layanan cloud.
 
-Jika ingin memperbaiki **satu laptop segera tanpa GitHub**, hentikan server, ganti `index.html` di `%LOCALAPPDATA%\EKInstrumentation\LaptopServer\index.html` dengan file REV13, jalankan server lagi, lalu refresh paksa browser. Setelah itu tetap push ke GitHub agar laptop lain mendapatkan versi yang sama.
+> **Keamanan:** Perintah `irm | iex` menjalankan kode PowerShell dari internet. Periksa [`install.ps1`](install.ps1) terlebih dahulu dan jalankan hanya dari repository yang dipercaya.
 
-### Pemeriksaan lokasi file yang benar
+### Menjalankan aplikasi
 
-```powershell
-$ui = Join-Path $env:LOCALAPPDATA 'EKInstrumentation\LaptopServer\index.html'
-Select-String -LiteralPath $ui -Pattern 'EK_UI_REV13'
-```
+1. Klik shortcut **EK Air Quality Hub**.
+2. Biarkan jendela **terminal server** tetap terbuka. Dashboard terbuka di browser pada **http://localhost:8787**.
+3. Untuk menghentikan server, tekan `Ctrl+C` di terminal atau tutup jendela terminal. Menutup browser saja **tidak** menghentikan server.
 
-Jika pencarian kosong, berarti file baru belum terpasang pada folder yang dijalankan shortcut; sekadar memindahkan HTML ke folder lain tidak cukup.
+**STOP** di Dashboard menghentikan *sesi Record*, **bukan** layanan server maupun penyimpanan data otomatis.
 
-## Instalasi cepat — Windows PowerShell
+## Arsitektur sistem
 
-1. Pastikan laptop terhubung ke internet.
-2. Buka **Windows PowerShell** (bukan CMD).
-3. Salin dan jalankan **satu perintah** berikut:
+<p align="center">
+  <img src="assets/github/architecture.svg" alt="Diagram data ESP32 PM dan Gas menuju Laptop Server dan penyimpanan" width="100%" />
+</p>
 
-```powershell
-irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
-```
+Sumber data tetap terpisah: ESP32 PM membaca sensor partikulat, sedangkan ESP32 Gas membaca sensor gas. Laptop menerima keduanya melalui **`POST /api/ingest`** dan menyediakan ekspor CSV gabungan. Penggabungan dilakukan berdasarkan **timestamp pengukuran**, bukan berdasarkan urutan paket diterima.
 
-4. Setelah installer sukses, buka ikon **EK Air Quality Hub** di **Desktop** atau **Start Menu**. Jendela **terminal server yang terlihat** akan muncul; dashboard otomatis dibuka di browser:
+## Menghubungkan ESP32 ke laptop
 
-   **http://localhost:8787**
+1. Sambungkan laptop dan **kedua ESP32** ke Wi-Fi/LAN yang sama.
+2. Jalankan server. Pada Dashboard, lihat kartu **Alamat Server Laptop / LAN** dan salin **IP IPv4** yang sesuai dengan jaringan ESP32.
+3. Buka dashboard masing-masing ESP32 (`http://192.168.4.1` saat terhubung ke hotspot ESP), masuk ke pengaturan **Laptop Server**, lalu masukkan **IP saja** — misalnya `192.168.1.100`.
+4. Aktifkan pengiriman ke laptop pada kedua alat. Firmware membentuk alamat `http://192.168.1.100:8787/api/ingest` secara otomatis.
+5. Jika Windows Firewall meminta izin, izinkan Python pada jaringan **Private**. Jangan mengekspos port `8787` ke internet publik.
 
-Installer mengunduh kode dari branch `main` pada repository ini, memeriksa Python **3.9 atau lebih baru**, dan mengabaikan `python.exe` yang rusak, alias Windows, maupun virtual environment yang tidak lengkap (termasuk error `No pyvenv.cfg file`). Jika tidak ditemukan instalasi Python normal, installer mencoba memasang Python 3.13 melalui `winget`. Apabila Python tidak dapat dipasang otomatis, instal dari [python.org](https://www.python.org/downloads/) lalu jalankan ulang perintah di atas.
-
-**Perhatian:** `irm ... | iex` mengunduh dan langsung menjalankan skrip PowerShell. Jalankan hanya setelah memeriksa sumber dan isi [`install.ps1`](./install.ps1). Koneksi internet diperlukan pada saat instalasi.
-
-### Menjalankan dan menghentikan server (REV12)
-
-Shortcut **EK Air Quality Hub** sekarang menjalankan **Python di terminal PowerShell yang terlihat**, bukan `pythonw.exe` tersembunyi. Terminal tersebut **harus tetap terbuka** selama monitoring dan perekaman berlangsung. Anda boleh meminimalkan terminal ke taskbar.
-
-- **Start server:** klik shortcut **EK Air Quality Hub** pada Desktop/Start Menu; tunggu pesan `SERVER RUNNING`, browser akan terbuka otomatis.
-- **Stop server:** bila sedang Record, tekan tombol **STOP** di dashboard terlebih dahulu, lalu tekan `Ctrl+C` di terminal **atau tutup jendela terminal (X)**. Keduanya menghentikan proses Python server.
-- **Menutup browser saja tidak menghentikan server.** Tombol STOP di dashboard hanya untuk sesi rekaman.
-- **Menjalankan lagi:** klik shortcut lagi. Jika sudah ada server aktif pada port yang sama, shortcut hanya membuka browser tanpa memulai server kedua. Untuk mengalihkan server versi lama yang tersembunyi ke terminal baru, hentikan proses lama terlebih dahulu atau jalankan installer REV12 ulang (installer akan menghentikan proses aplikasi lama sebelum mengganti launcher).
-- Ketika server berhenti, ESP32 tidak dapat mengirim live ke laptop; data yang tersedia di SD ESP32 dapat menyusul ketika server dan Wi-Fi tersambung lagi.
-
-**Catatan:** Installer yang sudah terpasang harus dijalankan ulang setelah perubahan file `install.ps1` dan `launch.ps1` di GitHub, karena installer membuat ulang shortcut yang sebelumnya memakai `-WindowStyle Hidden`. Tidak perlu mengubah firmware PM/Gas atau `server.py`. Folder `data/` tetap dipertahankan.
-
-### Lokasi aplikasi dan data
-
-| Item | Lokasi |
-|---|---|
-| Instalasi aplikasi | `%LOCALAPPDATA%\EKInstrumentation\LaptopServer` |
-| Database lokal | `%LOCALAPPDATA%\EKInstrumentation\LaptopServer\data\monitoring.sqlite3` |
-| Rekaman CSV | `%LOCALAPPDATA%\EKInstrumentation\LaptopServer\data\records` |
-| Log aplikasi | `%LOCALAPPDATA%\EKInstrumentation\LaptopServer\data\logs` |
-| Akses dashboard | `http://localhost:8787` |
-
-Installer **tidak menghapus atau menimpa folder `data/` saat pembaruan**.
-
-## Menghubungkan alat PM dan Gas ke laptop
-
-1. Jalankan **EK Air Quality Hub** di laptop.
-2. Sambungkan **laptop, ESP32 PM, dan ESP32 Gas ke jaringan Wi-Fi/router yang sama**.
-3. Pada laptop, buka PowerShell lalu ketik `ipconfig`. Cari **IPv4 Address** pada adapter Wi-Fi aktif, misalnya `192.168.1.100`.
-4. Di dashboard web ESP32 PM, pada pengaturan **Laptop Server**, masukkan **alamat IP saja**, misalnya `192.168.1.100`. Simpan lalu aktifkan pengiriman ke laptop.
-5. Ulangi langkah yang sama pada dashboard web ESP32 Gas.
-6. Lihat enam grafik realtime di dashboard laptop. Jika tidak ada data, pastikan Windows Firewall mengizinkan Python melalui jaringan **Private** untuk TCP port **8787**.
-
-Alamat penerima data dibentuk otomatis oleh firmware ESP32:
-
-```text
-http://192.168.1.100:8787/api/ingest
-```
-
-`192.168.1.100` hanyalah contoh; pakai IP laptop sendiri. Jika IP laptop berubah setelah pindah router, perbarui IP yang disimpan di kedua ESP32. **Jangan membuka port server ini ke internet publik.**
+**Perhatian:** `localhost` / `127.0.0.1` hanya berlaku di laptop itu sendiri dan **bukan** alamat yang bisa dipakai ESP32 untuk mengirim data.
 
 ## Fitur
 
-- **Dashboard:** enam grafik realtime — PM1, PM2.5, PM10, CO, CO₂, NO₂.
-- **Pilihan grafik:** Data Asli, MA 10, MA 20, MA 50, MA 100. Moving Average hanya mengubah *tampilan grafik*; data tersimpan tetap asli.
-- **Suhu dan kelembapan:** widget lingkaran menampilkan rata-rata dari pembacaan alat PM dan Gas ketika keduanya tersedia.
-- **Record:** sesi rekaman dengan nama yang dapat ditentukan, durasi manual atau berhenti otomatis.
-- **Label:** ubah label seperti `RPM1000` → `RPM2000` selama sesi masih berjalan; perubahan berlaku pada pembacaan berikutnya dan masuk ke CSV.
-- **Riwayat & Ekspor:** unduh CSV gabungan berdasarkan waktu pengukuran sensor, CSV per sesi, atau CSV mentah.
-- **Tema:** enam pilihan pada **Pengaturan → Tema Tampilan**: Brutal Light, Brutal Dark, Modern Light, Modern Dark, Scientific, dan Midnight. Pilihan tersimpan pada browser.
-- **Sidebar:** klik ikon `☰` untuk mengecilkan sidebar menjadi ikon, atau klik lagi untuk memperbesar. Pilihan tetap diingat di browser.
-- **Grafik popup:** klik tombol `⛶` di kanan judul tiap grafik untuk memperbesar. Grafik terus diperbarui setiap 1 detik dan mengikuti Data Asli / MA yang dipilih. Tutup dengan `✕ TUTUP`, `Esc`, atau klik bagian gelap di luar popup.
-- **Penyimpanan:** SQLite dan ekspor CSV di satu folder `data/`.
+| Modul | Kemampuan |
+| --- | --- |
+| **Dashboard** | Enam grafik PM1, PM2.5, PM10, CO, CO₂, dan NO₂; pembaruan tampilan sekitar 1 detik. |
+| **Tampilan grafik** | Data Asli, MA 10, MA 20, MA 50, MA 100; hanya memengaruhi grafik, bukan data CSV. |
+| **Grafik pop-up** | Perbesar setiap grafik dan lanjutkan pembaruan realtime. |
+| **Suhu & kelembapan** | Dua widget digital berbentuk lingkaran; rata-rata pembacaan PM dan Gas jika keduanya tersedia dan valid. |
+| **Sampling & Record** | Nama sesi, mode manual atau durasi otomatis, Stop, serta pergantian label tanpa menghentikan sesi. |
+| **Riwayat & ekspor** | CSV sesi, CSV gabungan per waktu pengukuran, dan CSV mentah untuk audit. |
+| **Antarmuka** | Sidebar dengan logo kucing yang dapat diperkecil; enam tema (Brutal Light/Dark, Modern Light/Dark, Scientific, Midnight). |
+| **Pengaturan** | Informasi LAN, pengelolaan data lokal, dan penghapusan berkonfirmasi. |
 
-**Catatan data:** server menyimpan data yang masuk ke SQLite meskipun tombol Record tidak aktif; tombol Record digunakan untuk menetapkan sesi dan label. Data PM dan Gas pada ekspor gabungan dipasangkan berdasarkan **timestamp pengukuran**, bukan waktu paket tiba. Bila waktunya tidak cocok, sebagian kolom bisa kosong agar tidak memasangkan pembacaan yang salah.
+### Label saat sesi masih berjalan
 
-## Catatan lama: Update tampilan REV11 (sudah digabung REV13)
+Contoh sesi **Uji Emisi Motor A**: mulai dengan label `RPM1000`, lalu saat kondisi berubah ketik `RPM2000` dan klik **Terapkan Label**. Sesi **tidak berhenti**; baris yang dicatat berikutnya memakai label baru.
 
-Untuk pengguna yang sudah menginstal aplikasinya, **hentikan server**, lalu cukup ganti file `index.html` di folder `%LOCALAPPDATA%\EKInstrumentation\LaptopServer`. Mulai lagi aplikasi melalui shortcut, dan tekan `Ctrl+F5` pada browser.
+> **Penting:** Semua paket yang diterima disimpan sebagai data mentah dalam SQLite meskipun Record belum dimulai. Mode Record memberi metadata sesi dan label. Bila ESP mengirim *backlog* microSD, label yang aktif saat data diterima dapat melekat pada data tertunda. Untuk analisis yang membutuhkan label tepat menurut waktu eksperimen, pastikan pengiriman realtime dan sinkronisasi jam perangkat.
 
-Pada REV13, file `index.html` yang memuat tampilan REV11 **ikut disertakan dan wajib di-push** bersama launcher. Semua data lokal tetap dipertahankan; firmware PM/Gas tidak perlu di-flash ulang.
+### CSV gabungan
 
-## Update versi aplikasi
+Data PM dan Gas ditempatkan dalam satu baris untuk **detik pengukuran yang sama**. Bila salah satu alat tidak memiliki pengukuran pada detik itu, kolomnya tetap kosong. File mentah mempertahankan identitas perangkat untuk audit; ekspor gabungan tidak memerlukan kolom device.
 
-1. Hentikan sesi rekaman dengan tombol **STOP**, lalu tutup terminal server.
-2. Jalankan kembali perintah instalasi yang sama:
+## Penyimpanan lokal
 
-```powershell
-irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
+Semua hasil tersimpan di satu lokasi:
+
+```text
+%LOCALAPPDATA%\EKInstrumentation\LaptopServer\
+├── server.py
+├── index.html
+├── launch.ps1
+├── assets\
+└── data\
+    ├── monitoring.sqlite3
+    ├── records\
+    ├── logs\
+    └── legacy_backup\     (jika ada)
 ```
 
-3. Buka lagi shortcut **EK Air Quality Hub**. Installer mengambil file terbaru dari branch `main` sambil mempertahankan folder data lokal.
+**Folder `data/` dipertahankan ketika installer diperbarui.** Sebelum migrasi besar atau menghapus aplikasi, buat salinan data terlebih dahulu. Data di microSD ESP32 dan Supabase tidak menjadi bagian dari folder ini.
 
-Untuk berjaga-jaga, backup `data/` sebelum pembaruan besar. Jangan jalankan dua server pada port yang sama.
+## Memperbarui aplikasi
 
-## Penghapusan seluruh data lokal
+1. Jika sedang merekam, tekan **STOP** pada sesi Record.
+2. Tutup terminal server untuk menghentikan Python.
+3. Jalankan kembali perintah instalasi PowerShell di atas.
+4. Buka ulang shortcut aplikasi, kemudian gunakan `Ctrl+F5` jika browser masih menampilkan cache lama.
 
-Buka dashboard dari **`http://localhost:8787` di laptop server**, kemudian masuk ke **Pengaturan → Hapus Semua Data Lokal**.
+> Pembaruan aplikasi tidak sama dengan update firmware ESP32. Firmware PM/Gas dikelola terpisah di [pmgas-esp32-firmware](https://github.com/efendiyhy/pmgas-esp32-firmware).
 
-- Hentikan rekaman aktif terlebih dahulu.
-- Ikuti konfirmasi, ketik `HAPUS SEMUA`, dan masukkan kata sandi awal **`ekinstru`**.
-- Data di SQLite, riwayat sesi, CSV lokal, dan backup migrasi yang disimpan aplikasi akan dihapus. **Data microSD ESP32 dan Supabase tidak ikut terhapus.**
+## Uninstall
 
-Password awal di atas dapat diketahui siapa pun karena berada di repository publik. Untuk penggunaan di luar jaringan lab tepercaya, ganti melalui variabel lingkungan **`EK_DELETE_PASSWORD`** sebelum server dijalankan. Server ini bukan layanan yang dirancang untuk diekspos langsung ke internet.
-
-## Menjalankan tanpa installer
-
-Unduh / clone repository, pastikan Python 3.9+ terpasang, kemudian jalankan dari folder yang berisi `server.py`:
-
-```powershell
-python server.py
-```
-
-Buka `http://localhost:8787`. Tidak diperlukan `pip install` karena server menggunakan pustaka standar Python. Perintah manual ini tidak membuat shortcut aplikasi.
-
-## Migrasi database dari versi lama
-
-Jika Anda sudah pernah menggunakan REV5–REV8, **backup dulu database dan file CSV lama**. REV9 dapat memigrasikan `monitoring.sqlite3` serta folder `records/` yang berada di sebelah `server.py` ke dalam `data/` ketika server dijalankan dari folder tersebut. Untuk instalasi melalui `irm` pada lokasi baru, matikan server lama dan pindahkan data dengan hati-hati ke direktori aplikasi yang baru sebelum server pertama kali berjalan.
-
-Jangan langsung menimpa SQLite baru yang sudah berisi pengukuran; ekspor data lama terlebih dahulu atau lakukan migrasi khusus.
-
-## Uninstall — Windows (aman untuk data)
-
-1. Jika sesi Record sedang aktif, tekan **STOP** terlebih dahulu.
-2. Tekan `Ctrl+C` atau tutup terminal server (tombol X), lalu tutup tab browser dashboard.
-3. Buka **Windows PowerShell** dan jalankan perintah ini (tidak memerlukan `irm`):
+Hentikan sesi Record, tutup terminal, lalu jalankan:
 
 ```powershell
 & "$env:LOCALAPPDATA\EKInstrumentation\LaptopServer\uninstall.ps1"
 ```
 
-Uninstaller menghapus shortcut **EK Air Quality Hub** dari Desktop dan Start Menu serta file program utamanya. **Folder `data/` (SQLite dan CSV) tetap dipertahankan** agar hasil pengukuran tidak hilang. Python yang terpasang di Windows tidak ikut dihapus.
+Uninstaller menghapus shortcut dan file aplikasi, namun **mempertahankan `data/`** agar rekaman tidak hilang. Jika benar-benar ingin menghapus seluruh rekaman, gunakan menu Pengaturan ketika server aktif atau hapus folder data secara manual **setelah melakukan backup dan menghentikan server**.
 
-Jika Anda **juga ingin menghapus semua data pengukuran lokal**, pastikan data sudah diekspor dan dicadangkan terlebih dahulu. Setelah server berhenti dan uninstaller dijalankan, barulah jalankan perintah opsional berikut:
+## Keamanan data
+
+- Gunakan server hanya pada **jaringan lokal tepercaya**; tidak disiapkan sebagai layanan HTTP publik.
+- Menu **Hapus Semua Data Lokal** hanya diizinkan dari `localhost`; memerlukan frasa konfirmasi dan password. Password bawaan `ekinstru` harus diganti untuk pemakaian rutin melalui variabel lingkungan `EK_DELETE_PASSWORD`.
+- Penghapusan lokal **tidak** menghapus data pada microSD ESP32 atau Supabase. Selama ESP masih terhubung, pengukuran baru dapat masuk kembali.
+- Jangan menyimpan token perangkat, password Wi-Fi, kredensial sensitif, database, atau ekspor CSV pribadi di repository GitHub publik.
+
+## Pemecahan masalah
+
+| Masalah | Pemeriksaan |
+| --- | --- |
+| Dashboard tidak dapat dibuka | Pastikan terminal server masih berjalan; akses `http://localhost:8787`. |
+| ESP tidak mengirim data | Pastikan Wi-Fi sama, IP laptop benar, firewall Private mengizinkan TCP `8787`, dan fitur LAN ESP aktif. |
+| Grafik tampak tertunda | Periksa apakah ESP sedang mengunggah antrean microSD. Refresh UI 1 detik tidak menjamin paket baru tiba 1 detik. |
+| CSV gabungan berisi kolom kosong | Cocokkan jam/timestamp PM dan Gas; jangan memasangkan data hanya menurut waktu terima. |
+| Instalasi gagal mencari Python | Gunakan Python 3.9+ yang berfungsi; periksa `py -0p` atau perbaiki instalasi Python. |
+| Tema/fitur baru belum muncul | Pastikan `index.html` terbaru sudah berada di repository, instal ulang, lalu tekan `Ctrl+F5`. |
+
+## Menjalankan dari source
 
 ```powershell
-Remove-Item -LiteralPath "$env:LOCALAPPDATA\EKInstrumentation\LaptopServer\data" -Recurse -Force
+python server.py
 ```
 
-**PERINGATAN:** Perintah kedua menghapus permanen database, riwayat, serta CSV lokal. Perintah tersebut tidak diperlukan untuk uninstall biasa. Data pada SD card ESP32 serta Supabase tidak ikut dihapus.
-
-Jika file `uninstall.ps1` belum ada karena instalasi yang sangat lama, unduh versi terbaru dari repository atau salin `uninstall.ps1` ke folder aplikasi tersebut terlebih dahulu.
+Buka `http://localhost:8787`. Backend memakai pustaka standar Python; instalasi manual ini tidak membuat shortcut Windows.
 
 ---
 
-**EK Instrumentation** · Project: [`efendiyhy/pmgas-merge`](https://github.com/efendiyhy/pmgas-merge)
-
-## Jika muncul `No pyvenv.cfg file` pada laptop lain
-
-Pesan ini menunjukkan bahwa salah satu `python.exe` yang dideteksi tidak dapat berjalan dengan benar, misalnya bekas virtual environment atau instalasi Python yang tidak lengkap. **Tidak berkaitan dengan firmware ESP32 PM/Gas atau sensor.**
-
-Perbaikan tersedia pada `install.ps1` versi ini. Setelah mengunggah **`install.ps1` dan `launch.ps1` baru** ke branch `main`, buka PowerShell baru pada laptop yang bermasalah, lalu ulangi:
-
-```powershell
-irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
-```
-
-Versi ini melewati kandidat Python yang gagal dijalankan, mencari Python normal lain, atau memasang Python lewat `winget`. Folder `data/` lama tidak dihapus. Jika masih gagal, jalankan `py -0p` dan `where.exe python` untuk memeriksa instalasi Python, lalu lakukan **Repair** Python melalui Windows Settings atau instal versi resmi dari python.org.
-
-Catatan: jika repository belum diperbarui di GitHub, perintah `irm` tetap menjalankan installer lama.
+<p align="center">
+  <a href="https://ek-instrumentation.com"><strong>EK Instrumentation</strong></a><br/>
+  <sub>Environmental Monitoring · Embedded Systems · Data Acquisition</sub><br/>
+  <a href="https://github.com/efendiyhy/pmgas-esp32-firmware">Firmware ESP32</a> · <a href="https://github.com/efendiyhy/pmgas-merge">Laptop Server</a>
+</p>
