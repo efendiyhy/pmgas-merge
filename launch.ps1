@@ -1,4 +1,4 @@
-# EK Air Quality Hub - visible terminal / foreground server (REV12)
+﻿# EK Air Quality Hub - visible terminal / foreground server (REV13)
 # Close THIS terminal window (or press Ctrl+C) to stop its server process.
 $ErrorActionPreference = 'Stop'
 
@@ -81,7 +81,7 @@ try {
     if (Test-HubRunning) {
         Write-Host "Server sudah berjalan di $BaseUrl." -ForegroundColor Yellow
         Write-Host 'Tidak membuka proses server kedua. Gunakan terminal server pertama untuk menghentikannya.' -ForegroundColor Yellow
-        Start-Process ($BaseUrl + '/')
+        Start-Process ($BaseUrl + '/?ui=REV13')
         exit 0
     }
 
@@ -108,7 +108,7 @@ try {
     Write-Host ''
     Write-Host 'SERVER RUNNING - Dashboard akan dibuka di browser.' -ForegroundColor Green
     Write-Host 'Tekan Ctrl+C / tutup TERMINAL INI untuk menghentikan server.' -ForegroundColor Yellow
-    Start-Process ($BaseUrl + '/')
+    Start-Process ($BaseUrl + '/?ui=REV13')
 
     # Foreground console remains open for the full life of server.py.
     # If Ctrl+C interrupts Wait-Process, finally cleans up the child.

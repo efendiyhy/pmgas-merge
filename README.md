@@ -1,4 +1,4 @@
-# EK Air Quality Hub
+# EK Air Quality Hub — REV13
 
 **Laptop Server — Monitoring PM & Gas**  
 By **EK Instrumentation** | Windows 10/11 | Python 3.9+ | Port `8787`
@@ -6,6 +6,44 @@ By **EK Instrumentation** | Windows 10/11 | Python 3.9+ | Port `8787`
 Dashboard lokal untuk menggabungkan data dari **dua alat ESP32 yang berbeda**: alat particulate matter (PM) dan alat monitoring gas. Keduanya mengirim data melalui Wi-Fi/LAN yang sama ke aplikasi di laptop. Aplikasi ini bukan firmware ESP32 dan tidak perlu diunggah melalui Arduino IDE.
 
 > **Repository resmi:** https://github.com/efendiyhy/pmgas-merge
+
+
+## PENTING: Perbaikan tampilan tidak muncul setelah REV12
+
+REV12 **hanya** memperbarui launcher terminal (`install.ps1`, `launch.ps1`, README), **tanpa membawa `index.html` versi REV11**. Karena installer selalu mengambil isi branch GitHub `main`, apabila `index.html` versi baru belum di-push, instalasi ulang tetap menampilkan antarmuka lama.
+
+**REV13 menyatukan keempat file** `index.html`, `install.ps1`, `launch.ps1`, `README.md`. Installer sekarang **menolak melanjutkan instalasi** jika file HTML yang diunduh masih versi lama, dan memeriksa bahwa HTML baru benar-benar tersalin ke folder aplikasi. Database dan CSV dalam `data/` tetap dipertahankan.
+
+### Cara update GitHub (wajib sebelum irm)
+
+1. Ekstrak paket REV13 dan salin **keempat file** ke ROOT repository `efendiyhy/pmgas-merge` (sejajar dengan `server.py`).
+2. Dari folder repository, jalankan:
+
+```powershell
+git add index.html install.ps1 launch.ps1 README.md
+git commit -m "REV13 fix themes sidebar and popup deployment"
+git push origin main
+```
+
+3. Cek GitHub: buka `https://github.com/efendiyhy/pmgas-merge/blob/main/index.html` dan cari `EK_UI_REV13`. Jika belum ada, jangan lanjut ke installer.
+4. Stop Record dahulu jika aktif; tutup terminal server lama; lalu jalankan:
+
+```powershell
+irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
+```
+
+5. Buka shortcut **EK Air Quality Hub**, kemudian buka `http://localhost:8787/?ui=REV13` dan tekan `Ctrl+F5`. Judul logo harus memuat **EK INSTRUMENTATION · UI REV13**. Masuk **Pengaturan** untuk melihat 6 tema; tombol **☰** pada sidebar untuk memperkecil; dan **⛶** pada setiap grafik untuk popup.
+
+Jika ingin memperbaiki **satu laptop segera tanpa GitHub**, hentikan server, ganti `index.html` di `%LOCALAPPDATA%\EKInstrumentation\LaptopServer\index.html` dengan file REV13, jalankan server lagi, lalu refresh paksa browser. Setelah itu tetap push ke GitHub agar laptop lain mendapatkan versi yang sama.
+
+### Pemeriksaan lokasi file yang benar
+
+```powershell
+$ui = Join-Path $env:LOCALAPPDATA 'EKInstrumentation\LaptopServer\index.html'
+Select-String -LiteralPath $ui -Pattern 'EK_UI_REV13'
+```
+
+Jika pencarian kosong, berarti file baru belum terpasang pada folder yang dijalankan shortcut; sekadar memindahkan HTML ke folder lain tidak cukup.
 
 ## Instalasi cepat — Windows PowerShell
 
@@ -81,11 +119,11 @@ http://192.168.1.100:8787/api/ingest
 
 **Catatan data:** server menyimpan data yang masuk ke SQLite meskipun tombol Record tidak aktif; tombol Record digunakan untuk menetapkan sesi dan label. Data PM dan Gas pada ekspor gabungan dipasangkan berdasarkan **timestamp pengukuran**, bukan waktu paket tiba. Bila waktunya tidak cocok, sebagian kolom bisa kosong agar tidak memasangkan pembacaan yang salah.
 
-## Update tampilan REV11 (tanpa perubahan firmware)
+## Catatan lama: Update tampilan REV11 (sudah digabung REV13)
 
 Untuk pengguna yang sudah menginstal aplikasinya, **hentikan server**, lalu cukup ganti file `index.html` di folder `%LOCALAPPDATA%\EKInstrumentation\LaptopServer`. Mulai lagi aplikasi melalui shortcut, dan tekan `Ctrl+F5` pada browser.
 
-Pada REV12, perbarui juga `install.ps1` dan `launch.ps1` untuk mengganti launcher tersembunyi dengan terminal yang terlihat. File `server.py` dan `index.html` REV11 tidak perlu diganti; `data/` tidak ditimpa dan firmware PM/Gas tidak perlu di-flash ulang.
+Pada REV13, file `index.html` yang memuat tampilan REV11 **ikut disertakan dan wajib di-push** bersama launcher. Semua data lokal tetap dipertahankan; firmware PM/Gas tidak perlu di-flash ulang.
 
 ## Update versi aplikasi
 

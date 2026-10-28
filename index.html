@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EK Instrumentation — Air Quality Hub</title><link rel="icon" type="image/x-icon" href="/favicon.ico">
+<title>EK Instrumentation — Air Quality Hub / REV13</title><meta name="ek-ui-version" content="EK_UI_REV13"><link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
 :root{--bg:#e8dcff;--ink:#150527;--dark:#270b48;--purple:#7026dc;--purple2:#ae79ff;--purple3:#d7bcff;--white:#fffaff;--mint:#c0ffd9;--border:3px solid var(--ink)}
 *[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.3}h1,h2,h3,p{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{max-width:1490px;margin:0 auto;padding:24px}
@@ -137,21 +137,107 @@ body[data-theme="dark"] .legend .swatch[style*="#7123df"]{background:#c69aff!imp
 body[data-theme="dark"] .legend .swatch[style*="#ff4788"]{background:#ff83be!important}
 @media(max-width:1120px){.layout{grid-template-columns:190px minmax(0,1fr)}.download-grid{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.layout{display:block}.sidebar{height:auto;position:relative;padding:14px;gap:7px}.brandbox{display:none}.sidecaption,.sidefooter{display:none}.sidenav{flex-direction:row;flex-wrap:wrap}.navbtn{width:auto;flex:1 1 115px;padding:10px 8px}.app{padding:17px 16px 48px}.download-grid{grid-template-columns:1fr}}
+
+/* REV11 / SIDEBAR COLLAPSE + DIVERSE THEMES + CHART MODAL */
+.sidebar-header{display:flex;align-items:start;gap:7px}
+.sidebar-header .brandbox{min-width:0;flex:1}
+.side-toggle{border:2px solid #d9b8ff;background:#4c217d;color:#fff;font-size:19px;line-height:1;padding:9px;cursor:pointer;min-width:36px;min-height:36px}
+.side-toggle:hover{background:#7240b0}.nav-icon{width:24px;flex:0 0 24px;font-size:20px;text-align:center;line-height:1}.nav-text{white-space:nowrap}
+.layout.sidebar-collapsed{grid-template-columns:78px minmax(0,1fr)}
+.sidebar-collapsed .sidebar{padding:18px 8px;gap:12px}
+.sidebar-collapsed .sidebar-header{flex-direction:column;align-items:stretch}
+.sidebar-collapsed .brandbox{padding:9px 4px;text-align:center}
+.sidebar-collapsed .brandbox strong{font-size:22px}
+.sidebar-collapsed .brand-long,.sidebar-collapsed .sidecaption,.sidebar-collapsed .sidefooter,.sidebar-collapsed .nav-text{display:none}
+.sidebar-collapsed .side-toggle{width:100%;min-width:0}
+.sidebar-collapsed .navbtn{justify-content:center;padding:13px 0}
+.sidebar-collapsed .nav-icon{font-size:22px}
+.theme-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.themebtn{display:flex;align-items:center;gap:9px;text-align:left;font-size:12px;min-width:0;padding:11px}
+.theme-preview{width:22px;height:22px;border:2px solid #777;flex-shrink:0;border-radius:4px;display:inline-block}
+.theme-preview.brutal-light{background:linear-gradient(135deg,#e8dcff 50%,#7026dc 50%)}
+.theme-preview.brutal-dark{background:linear-gradient(135deg,#110c1c 50%,#b58aff 50%)}
+.theme-preview.modern-light{background:linear-gradient(135deg,#f3f5fb 50%,#5c64e7 50%)}
+.theme-preview.modern-dark{background:linear-gradient(135deg,#101827 50%,#9ca5ff 50%)}
+.theme-preview.scientific{background:linear-gradient(135deg,#f7fafb 50%,#1a728b 50%)}
+.theme-preview.midnight{background:linear-gradient(135deg,#090f20 50%,#43dbc2 50%)}
+.plotcard .chart-actions{display:flex;align-items:center;gap:10px}
+.expand-chart{padding:6px 10px;min-width:35px;height:34px;background:var(--purple3);color:var(--ink);font-size:18px;font-weight:bold;border:2px solid var(--ink);cursor:pointer}
+.expand-chart:hover{background:var(--purple2);color:var(--ink)}
+body.modal-open{overflow:hidden}
+.chart-modal{position:fixed;inset:0;z-index:1000;background:rgba(9,5,19,.82);padding:24px;display:flex;align-items:center;justify-content:center}
+.chart-modal[hidden]{display:none!important}
+.chart-modal-box{background:var(--white);color:var(--ink);width:min(1200px,100%);max-height:94vh;overflow:auto;border:var(--border);box-shadow:10px 10px 0 var(--purple2);padding:22px;border-radius:var(--surface-radius,0px)}
+.chart-modal-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.chart-modal-top h2{font-size:clamp(24px,3vw,40px);font-weight:1000;margin-top:4px}
+.chart-modal-top p{font-size:13px;font-weight:700;margin-top:5px}
+.modal-close{background:var(--purple3);color:var(--ink);border:2px solid var(--ink);padding:12px 16px;font-weight:900;cursor:pointer}
+.chart-modal-canvas{height:min(58vh,520px);min-height:260px;padding:12px;background:var(--plot-bg,#fbf8ff);border:2px solid var(--ink);border-radius:var(--surface-radius,0px)}
+.chart-modal-canvas canvas{display:block;width:100%;height:100%}
+.modal-legend{display:flex;flex-wrap:wrap;gap:18px;font-weight:850;font-size:13px;margin-top:15px}
+.modal-note{font-size:12px;font-weight:700;opacity:.8;margin-top:13px}
+/* chart canvas palette follows the chosen theme */
+body{--chart-grid:#e2d5ef;--chart-text:#55436a;--chart-line1:#7123df;--chart-line2:#ff4788;--plot-bg:#fbf8ff;--surface-radius:0px}
+body[data-theme="dark"]{--chart-grid:#504166;--chart-text:#e7d6ff;--chart-line1:#c69aff;--chart-line2:#ff83be;--plot-bg:#1b1529}
+/* Softer themes retain functionality; no aggressive black borders/shadows */
+body[data-theme="modern-light"]{--bg:#f3f5fb;--ink:#273247;--dark:#303c60;--purple:#5b63d7;--purple2:#a7b0f7;--purple3:#e1e5ff;--white:#ffffff;--mint:#d6f5e8;--border:2px solid #cfd6e5;--chart-grid:#e5eaf3;--chart-text:#57647a;--chart-line1:#5659dc;--chart-line2:#e85b96;--plot-bg:#f9fbff;--surface-radius:14px}
+body[data-theme="modern-dark"]{--bg:#101827;--ink:#eef2ff;--dark:#25314c;--purple:#a4a9ff;--purple2:#7a88d8;--purple3:#303c60;--white:#1d293e;--mint:#234e48;--border:2px solid #394860;--chart-grid:#394963;--chart-text:#cad4ed;--chart-line1:#aaa8ff;--chart-line2:#ff8eba;--plot-bg:#162136;--surface-radius:14px}
+body[data-theme="scientific"]{--bg:#f7f9fa;--ink:#1b2b37;--dark:#20465a;--purple:#18718f;--purple2:#90c4d1;--purple3:#e3f3f5;--white:#ffffff;--mint:#dcf7ef;--border:1px solid #c3d4dc;--chart-grid:#e1e9ee;--chart-text:#425b6d;--chart-line1:#1384a2;--chart-line2:#d27b49;--plot-bg:#fff;--surface-radius:7px}
+body[data-theme="midnight"]{--bg:#090f20;--ink:#f0f8ff;--dark:#182640;--purple:#51d7cf;--purple2:#278d9d;--purple3:#153644;--white:#131e34;--mint:#1c4540;--border:1px solid #304862;--chart-grid:#31445f;--chart-text:#bfd7e8;--chart-line1:#4dd8cb;--chart-line2:#ffb571;--plot-bg:#101a30;--surface-radius:10px}
+body[data-theme="modern-light"] .sidebar,body[data-theme="modern-dark"] .sidebar,body[data-theme="scientific"] .sidebar,body[data-theme="midnight"] .sidebar{background:var(--dark);border-color:var(--purple2)}
+body[data-theme="modern-light"] .navbtn.active,body[data-theme="modern-dark"] .navbtn.active,body[data-theme="scientific"] .navbtn.active,body[data-theme="midnight"] .navbtn.active{background:var(--purple3);color:var(--ink);border-color:var(--purple2)}
+body[data-theme="modern-light"] .brandbox,body[data-theme="modern-dark"] .brandbox,body[data-theme="scientific"] .brandbox,body[data-theme="midnight"] .brandbox{background:var(--purple3);color:var(--ink);border-color:var(--purple2);box-shadow:none}
+body[data-theme="modern-light"] .side-toggle,body[data-theme="modern-dark"] .side-toggle,body[data-theme="scientific"] .side-toggle,body[data-theme="midnight"] .side-toggle{background:var(--purple3);color:var(--ink);border-color:var(--purple2)}
+body[data-theme="modern-light"] .plotcard,body[data-theme="modern-dark"] .plotcard,body[data-theme="scientific"] .plotcard,body[data-theme="midnight"] .plotcard,
+body[data-theme="modern-light"] .stat,body[data-theme="modern-dark"] .stat,body[data-theme="scientific"] .stat,body[data-theme="midnight"] .stat,
+body[data-theme="modern-light"] .settingcard,body[data-theme="modern-dark"] .settingcard,body[data-theme="scientific"] .settingcard,body[data-theme="midnight"] .settingcard,
+body[data-theme="modern-light"] .panel,body[data-theme="modern-dark"] .panel,body[data-theme="scientific"] .panel,body[data-theme="midnight"] .panel,
+body[data-theme="modern-light"] .controlcard,body[data-theme="modern-dark"] .controlcard,body[data-theme="scientific"] .controlcard,body[data-theme="midnight"] .controlcard,
+body[data-theme="modern-light"] .env-card,body[data-theme="modern-dark"] .env-card,body[data-theme="scientific"] .env-card,body[data-theme="midnight"] .env-card,
+body[data-theme="modern-light"] .download-tile,body[data-theme="modern-dark"] .download-tile,body[data-theme="scientific"] .download-tile,body[data-theme="midnight"] .download-tile{background:var(--white);color:var(--ink);border:var(--border);border-radius:var(--surface-radius);box-shadow:0 6px 18px rgba(0,0,0,.07)}
+body[data-theme="modern-light"] .stat:nth-child(n),body[data-theme="scientific"] .stat:nth-child(n){background:var(--white)}
+body[data-theme="modern-dark"] .stat:nth-child(n),body[data-theme="midnight"] .stat:nth-child(n){background:var(--white)}
+body[data-theme="modern-light"] .bar,body[data-theme="modern-dark"] .bar,body[data-theme="scientific"] .bar,body[data-theme="midnight"] .bar{background:var(--dark);color:#fff;border:var(--border);border-radius:var(--surface-radius);box-shadow:none}
+body[data-theme="modern-light"] .chartbg,body[data-theme="modern-dark"] .chartbg,body[data-theme="scientific"] .chartbg,body[data-theme="midnight"] .chartbg{background:var(--plot-bg);border:var(--border);border-radius:var(--surface-radius)}
+body[data-theme="modern-light"] .env-card.humidity,body[data-theme="modern-dark"] .env-card.humidity,body[data-theme="scientific"] .env-card.humidity,body[data-theme="midnight"] .env-card.humidity{background:var(--white)}
+body[data-theme="modern-light"] .env-source,body[data-theme="modern-dark"] .env-source,body[data-theme="scientific"] .env-source,body[data-theme="midnight"] .env-source{background:var(--bg);color:var(--ink);border:var(--border)}
+body[data-theme="modern-light"] .env-source em,body[data-theme="modern-dark"] .env-source em,body[data-theme="scientific"] .env-source em,body[data-theme="midnight"] .env-source em{color:var(--purple)}
+body[data-theme="modern-light"] .graph-control,body[data-theme="modern-dark"] .graph-control,body[data-theme="scientific"] .graph-control,body[data-theme="midnight"] .graph-control{background:var(--white);border:var(--border);border-radius:var(--surface-radius)}
+body[data-theme="modern-light"] .graph-select,body[data-theme="modern-dark"] .graph-select,body[data-theme="scientific"] .graph-select,body[data-theme="midnight"] .graph-select,
+body[data-theme="modern-light"] .field input,body[data-theme="modern-dark"] .field input,body[data-theme="scientific"] .field input,body[data-theme="midnight"] .field input,
+body[data-theme="modern-light"] .field select,body[data-theme="modern-dark"] .field select,body[data-theme="scientific"] .field select,body[data-theme="midnight"] .field select{background:var(--bg);color:var(--ink);border:var(--border);border-radius:8px}
+body[data-theme="modern-dark"] .graph-description,body[data-theme="midnight"] .graph-description{color:#b6caea}
+body[data-theme="modern-light"] .button,body[data-theme="modern-dark"] .button,body[data-theme="scientific"] .button,body[data-theme="midnight"] .button,
+body[data-theme="modern-light"] .themebtn,body[data-theme="modern-dark"] .themebtn,body[data-theme="scientific"] .themebtn,body[data-theme="midnight"] .themebtn{background:var(--purple3);color:var(--ink);border:var(--border);border-radius:9px;box-shadow:none}
+body[data-theme="modern-light"] .themebtn.selected,body[data-theme="modern-dark"] .themebtn.selected,body[data-theme="scientific"] .themebtn.selected,body[data-theme="midnight"] .themebtn.selected{background:var(--purple);color:var(--bg)}
+body[data-theme="modern-light"] th,body[data-theme="modern-dark"] th,body[data-theme="scientific"] th,body[data-theme="midnight"] th{background:var(--dark);color:#fff}
+body[data-theme="modern-light"] .logo,body[data-theme="modern-dark"] .logo,body[data-theme="scientific"] .logo,body[data-theme="midnight"] .logo{background:var(--dark);color:#fff}
+body[data-theme="modern-light"] .controlcard.dark,body[data-theme="modern-dark"] .controlcard.dark,body[data-theme="scientific"] .controlcard.dark,body[data-theme="midnight"] .controlcard.dark{background:var(--dark);color:#fff}
+body[data-theme="modern-light"] .liveinfo,body[data-theme="modern-dark"] .liveinfo,body[data-theme="scientific"] .liveinfo,body[data-theme="midnight"] .liveinfo{background:var(--dark);color:#fff}
+body[data-theme="modern-light"] .env-dial,body[data-theme="modern-dark"] .env-dial,body[data-theme="scientific"] .env-dial,body[data-theme="midnight"] .env-dial{background:#1a2944;color:#fff;box-shadow:inset 0 0 0 8px var(--purple2)}
+body[data-theme="modern-light"] .env-chip,body[data-theme="modern-dark"] .env-chip,body[data-theme="scientific"] .env-chip,body[data-theme="midnight"] .env-chip{background:var(--purple3);color:var(--ink)}
+body[data-theme="modern-dark"] .currentlabel,body[data-theme="midnight"] .currentlabel{background:var(--purple3);color:var(--ink)}
+body[data-theme="modern-dark"] .chip,body[data-theme="midnight"] .chip{background:var(--white);color:var(--ink)}
+@media(max-width:760px){.layout.sidebar-collapsed{display:block}.sidebar-collapsed .sidebar{padding:14px;gap:7px}.sidebar-collapsed .brand-long,.sidebar-collapsed .nav-text{display:inline}.sidebar-collapsed .sidecaption,.sidebar-collapsed .sidefooter{display:none}.sidebar-collapsed .sidenav{flex-direction:row;flex-wrap:wrap}.sidebar-collapsed .navbtn{flex:1 1 110px;justify-content:flex-start;padding:10px 8px}.sidebar-header{display:none}}
+@media(max-width:550px){.theme-choice{grid-template-columns:1fr}.chart-modal{padding:9px}.chart-modal-box{padding:14px;max-height:98vh}.chart-modal-canvas{height:48vh;min-height:230px}.modal-close{padding:9px}}
 </style></head>
 <body data-theme="light"><div class="layout">
-<aside class="sidebar" aria-label="Navigasi aplikasi">
-  <div class="brandbox"><strong>EK<span style="font-size:13px"> / INSTRUMENTATION</span></strong><span>AIR QUALITY HUB</span></div>
+<aside class="sidebar" aria-label="Navigasi aplikasi" id="appSidebar">
+  <div class="sidebar-header">
+    <div class="brandbox"><strong>EK<span class="brand-long" style="font-size:13px"> / INSTRUMENTATION</span></strong><span class="brand-long">AIR QUALITY HUB</span></div>
+    <button type="button" class="side-toggle" id="sidebarToggle" aria-label="Perkecil sidebar" aria-expanded="true" title="Perkecil sidebar">☰</button>
+  </div>
   <div class="sidecaption">WORKSPACE / MENU</div>
-  <nav class="sidenav">
-    <button type="button" class="navbtn active" data-nav="dashboard"><span class="num">01</span> DASHBOARD</button>
-    <button type="button" class="navbtn" data-nav="record"><span class="num">02</span> RECORD &amp; LABEL</button>
-    <button type="button" class="navbtn" data-nav="history"><span class="num">03</span> RIWAYAT</button>
-    <button type="button" class="navbtn" data-nav="downloads"><span class="num">04</span> EKSPOR DATA</button>
-    <button type="button" class="navbtn" data-nav="settings"><span class="num">05</span> PENGATURAN</button>
+  <nav class="sidenav" aria-label="Menu utama">
+    <button type="button" class="navbtn active" data-nav="dashboard" title="Dashboard" aria-label="Dashboard"><span class="nav-icon" aria-hidden="true">▦</span><span class="nav-text">DASHBOARD</span></button>
+    <button type="button" class="navbtn" data-nav="record" title="Record & Label" aria-label="Record dan Label"><span class="nav-icon" aria-hidden="true">●</span><span class="nav-text">RECORD &amp; LABEL</span></button>
+    <button type="button" class="navbtn" data-nav="history" title="Riwayat" aria-label="Riwayat"><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-text">RIWAYAT</span></button>
+    <button type="button" class="navbtn" data-nav="downloads" title="Ekspor Data" aria-label="Ekspor Data"><span class="nav-icon" aria-hidden="true">⇩</span><span class="nav-text">EKSPOR DATA</span></button>
+    <button type="button" class="navbtn" data-nav="settings" title="Pengaturan" aria-label="Pengaturan"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-text">PENGATURAN</span></button>
   </nav>
-  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK INSTRUMENTATION</div>
+  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV13</div>
 </aside>
-<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
+<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV13</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
 <div class="status"><span class="chip"><i id="pmDot" class="dot"></i> PM <span id="pmStatus">OFFLINE</span></span><span class="chip"><i id="gasDot" class="dot"></i> GAS <span id="gasStatus">OFFLINE</span></span><span class="chip"><i id="serverDot" class="dot on"></i> LAPTOP ONLINE</span></div></header>
 <section class="summary page-active" data-page="dashboard"><div class="stat"><small>Data masuk / total</small><strong id="nTotal">0</strong></div><div class="stat"><small>Data PM</small><strong id="nPM">0</strong></div><div class="stat"><small>Data gas</small><strong id="nGas">0</strong></div><div class="stat"><small>Sesi saat ini</small><strong id="nSession">—</strong></div></section>
 <div class="page-intro" data-page="record"><h2>Record &amp; Label</h2><p>Mulai, berhenti, atur durasi, dan ubah label tanpa menghentikan sesi.</p></div>
@@ -247,8 +333,15 @@ body[data-theme="dark"] .legend .swatch[style*="#ff4788"]{background:#ff83be!imp
 </section>
 <div class="page-intro" data-page="settings"><h2>Pengaturan Aplikasi</h2><p>Tema tampilan, informasi penyimpanan, dan pengelolaan data lokal.</p></div>
 <section class="settings-grid" data-page="settings">
-  <article class="settingcard"><h3>01 / Tema Tampilan</h3><p>Pilih tema terang atau gelap. Pilihan tersimpan di browser ini dan tidak memengaruhi pembacaan sensor.</p>
-    <div class="theme-choice"><button class="themebtn selected" type="button" data-theme-choice="light">☀ TERANG</button><button class="themebtn" type="button" data-theme-choice="dark">☾ GELAP</button></div>
+  <article class="settingcard"><h3>01 / Tema Tampilan</h3><p>Pilih gaya dashboard sesuai kebutuhan. Perubahan langsung diterapkan, tersimpan pada browser ini, dan tidak memengaruhi database atau sensor.</p>
+    <div class="theme-choice" role="group" aria-label="Pilih tema aplikasi">
+      <button class="themebtn selected" type="button" data-theme-choice="light"><i class="theme-preview brutal-light" aria-hidden="true"></i>BRUTAL LIGHT</button>
+      <button class="themebtn" type="button" data-theme-choice="dark"><i class="theme-preview brutal-dark" aria-hidden="true"></i>BRUTAL DARK</button>
+      <button class="themebtn" type="button" data-theme-choice="modern-light"><i class="theme-preview modern-light" aria-hidden="true"></i>MODERN LIGHT</button>
+      <button class="themebtn" type="button" data-theme-choice="modern-dark"><i class="theme-preview modern-dark" aria-hidden="true"></i>MODERN DARK</button>
+      <button class="themebtn" type="button" data-theme-choice="scientific"><i class="theme-preview scientific" aria-hidden="true"></i>SCIENTIFIC</button>
+      <button class="themebtn" type="button" data-theme-choice="midnight"><i class="theme-preview midnight" aria-hidden="true"></i>MIDNIGHT</button>
+    </div>
     <h3 style="margin-top:32px">02 / Folder Data</h3><p>Semua file disimpan pada <b>data/</b> di folder instalasi, terdiri dari <b>monitoring.sqlite3</b>, file dukungan SQLite, dan <b>records/</b> untuk CSV sesi. Folder data tidak ditimpa saat update installer.</p>
   </article>
   <article class="settingcard"><h3>03 / Hapus Semua Data Lokal</h3><p>Tindakan permanen: menghapus pembacaan, riwayat sesi, perubahan label, CSV sesi, dan cadangan migrasi lokal. Tidak menghapus data di microSD ESP atau Supabase. Hentikan RECORD terlebih dahulu.</p>
@@ -261,6 +354,15 @@ body[data-theme="dark"] .legend .swatch[style*="#ff4788"]{background:#ff83be!imp
 </section>
 <div class="global-notice" id="error" role="status" aria-live="polite"></div>
 </main></div>
+<div id="chartModal" class="chart-modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+  <div class="chart-modal-box">
+    <div class="chart-modal-top"><div><div class="eyebrow">LIVE GRAPH / EK INSTRUMENTATION</div><h2 id="modalTitle">Grafik</h2><p id="modalDetail">Data Asli</p></div>
+    <button id="modalClose" type="button" class="modal-close" aria-label="Tutup grafik besar" title="Tutup grafik">✕ TUTUP</button></div>
+    <div class="chart-modal-canvas"><canvas id="modalCanvas" aria-label="Grafik realtime diperbesar"></canvas></div>
+    <div class="modal-legend" id="modalLegend"></div>
+    <p class="modal-note">Grafik diperbarui setiap 1 detik · pilih Data Asli atau MA di Dashboard · tekan ESC untuk menutup.</p>
+  </div>
+</div>
 <script>
 'use strict';
 const el=id=>document.getElementById(id);
@@ -357,8 +459,8 @@ function graphSeries(samples,key,period){
   }
   return result;
 }
-function graph(card){
-  const canvas=card.querySelector('canvas'),ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect();
+function graph(card, overrideCanvas=null, updateMetric=true){
+  const canvas=overrideCanvas||card.querySelector('canvas'),ctx=canvas.getContext('2d'),rect=canvas.getBoundingClientRect();
   const w=Math.max(rect.width,150),h=Math.max(rect.height,130),scale=window.devicePixelRatio||1;
   canvas.width=Math.round(w*scale);canvas.height=Math.round(h*scale);ctx.setTransform(scale,0,0,scale,0,0);ctx.clearRect(0,0,w,h);
   const keys=card.dataset.pair.split(','),samples=rows.filter(r=>r.device_type===card.dataset.type);
@@ -369,9 +471,11 @@ function graph(card){
   const left=42,right=11,top=9,bottom=26,pw=w-left-right,ph=h-top-bottom;
   const min=vals.length?Math.min(...vals):0,max=vals.length?Math.max(...vals):10;
   let lo=Math.max(0,min-(max-min||1)*.16),hi=max+(max-min||1)*.16;if(hi<=lo)hi=lo+1;
-  ctx.font='10px Arial';ctx.textAlign='right';ctx.fillStyle=document.body.dataset.theme==='dark'?'#e7d6ff':'#55436a';ctx.lineWidth=1;
-  for(let k=0;k<=3;k++){const y=top+ph*k/3;ctx.strokeStyle=document.body.dataset.theme==='dark'?'#504166':'#e2d5ef';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(fmt(hi-(hi-lo)*k/3,1),left-6,y+3)}
-  const colors=document.body.dataset.theme==='dark'?['#c69aff','#ff83be']:['#7123df','#ff4788'];
+  const palette=getComputedStyle(document.body);
+  const graphColor=name=>palette.getPropertyValue(name).trim();
+  ctx.font='10px Arial';ctx.textAlign='right';ctx.fillStyle=graphColor('--chart-text');ctx.lineWidth=1;
+  for(let k=0;k<=3;k++){const y=top+ph*k/3;ctx.strokeStyle=graphColor('--chart-grid');ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();ctx.fillText(fmt(hi-(hi-lo)*k/3,1),left-6,y+3)}
+  const colors=[graphColor('--chart-line1'),graphColor('--chart-line2')];
   series.forEach((values,idx)=>{
     ctx.lineWidth=2.4;ctx.strokeStyle=colors[idx];ctx.beginPath();let connected=false;
     values.forEach((v,i)=>{
@@ -380,13 +484,13 @@ function graph(card){
       connected?ctx.lineTo(x,y):ctx.moveTo(x,y);connected=true;
     });ctx.stroke();
   });
-  ctx.fillStyle=document.body.dataset.theme==='dark'?'#d7c1f4':'#4b2e70';ctx.textAlign='center';
+  ctx.fillStyle=graphColor('--chart-text');ctx.textAlign='center';
   const desc=graphWindow===1?'Data asli':`MA ${graphWindow}`;
   ctx.fillText(data.length?`${desc} · ${data.length} pembacaan terakhir`:'MENUNGGU DATA SENSOR...',left+pw/2,h-5);
   // Nilai digital utama tetap nilai ASLI paling baru, meski grafik memakai MA.
   const recent=[...samples].reverse().find(r=>keys.some(k=>typeof r.measurements?.[k]==='number'));
   const numbers=recent?keys.map(k=>recent.measurements[k]).filter(v=>typeof v==='number'&&Number.isFinite(v)):[];
-  card.querySelector('.metricval').textContent=numbers.length?fmt(numbers.reduce((a,b)=>a+b,0)/numbers.length):'—';
+  if(updateMetric)card.querySelector('.metricval').textContent=numbers.length?fmt(numbers.reduce((a,b)=>a+b,0)/numbers.length):'—';
 }
 function setGraphMode(windowSize){
   if(![1,10,20,50,100].includes(windowSize))return;
@@ -395,7 +499,8 @@ function setGraphMode(windowSize){
   el('graphDescription').textContent=windowSize===1
     ?'DATA ASLI — grafik menampilkan pembacaan sensor tanpa perataan. Angka besar, database, dan CSV selalu menggunakan data asli.'
     :`MA ${windowSize} — setiap titik adalah rata-rata ${windowSize} pembacaan valid berturut-turut (butuh minimal ${windowSize} pembacaan). Hanya garis grafik berubah; angka besar, database, dan CSV tetap data asli.`;
-  cards.forEach(graph);
+  cards.forEach(card=>graph(card));
+  requestAnimationFrame(drawExpandedChart);
 }
 function renderSessions(ss){
   const t=el('sessions');t.replaceChildren();
@@ -458,7 +563,7 @@ async function refresh(){
     el('nGas').textContent=fmt(a.counts.gas,0);
     markStatus('pmDot','pmStatus',a.recent.pm);
     markStatus('gasDot','gasStatus',a.recent.gas);
-    syncActiveUI(a);renderSessions(a.sessions);cards.forEach(graph);renderClimate();
+    syncActiveUI(a);renderSessions(a.sessions);cards.forEach(card=>graph(card));renderClimate();drawExpandedChart();
     el('serverDot').classList.add('on');
   }catch(error){
     el('error').textContent='Gagal mengambil data dari server laptop: '+error.message;
@@ -483,21 +588,71 @@ async function act(which){
 
 // REV9: menu navigation, theme preference and localhost-only destructive action.
 function switchPage(page){
+  if(enlargedCard)closeExpandedChart();
   const target=page==='history'?'dashboard':page;
   document.querySelectorAll('[data-page]').forEach(n=>n.classList.toggle('page-active',n.dataset.page===target));
   document.querySelectorAll('[data-nav]').forEach(n=>{n.classList.toggle('active',n.dataset.nav===page);n.setAttribute('aria-current',n.dataset.nav===page?'page':'false')});
   window.scrollTo({top:0,behavior:'instant'});
   if(page==='history')el('historyPanel').scrollIntoView({behavior:'smooth',block:'start'});
-  if(target==='dashboard')requestAnimationFrame(()=>cards.forEach(graph));
+  if(target==='dashboard')requestAnimationFrame(()=>cards.forEach(card=>graph(card)));
 }
+const availableThemes=new Set(['light','dark','modern-light','modern-dark','scientific','midnight']);
 function setTheme(theme){
-  if(!['light','dark'].includes(theme))return;
+  if(!availableThemes.has(theme))return;
   document.body.dataset.theme=theme;
   document.querySelectorAll('[data-theme-choice]').forEach(n=>{const sel=n.dataset.themeChoice===theme;n.classList.toggle('selected',sel);n.setAttribute('aria-pressed',sel?'true':'false')});
   try{localStorage.setItem('ek-hub-theme',theme)}catch(_){}
-  requestAnimationFrame(()=>cards.forEach(graph));
+  requestAnimationFrame(()=>{cards.forEach(card=>graph(card));drawExpandedChart()});
 }
-try{setTheme(localStorage.getItem('ek-hub-theme')==='dark'?'dark':'light')}catch(_){setTheme('light')}
+try{setTheme(localStorage.getItem('ek-hub-theme')||'light')}catch(_){setTheme('light')}
+// Sidebar memory: accessible title and icon-only layout on wide screens.
+function setSidebarCollapsed(collapsed){
+  const layout=document.querySelector('.layout');
+  layout.classList.toggle('sidebar-collapsed',collapsed);
+  const toggle=el('sidebarToggle');
+  toggle.setAttribute('aria-expanded',String(!collapsed));
+  toggle.setAttribute('aria-label',collapsed?'Perluas sidebar':'Perkecil sidebar');
+  toggle.title=collapsed?'Perluas sidebar':'Perkecil sidebar';
+  try{localStorage.setItem('ek-hub-sidebar',collapsed?'collapsed':'open')}catch(_){}
+  requestAnimationFrame(()=>{cards.forEach(card=>graph(card));drawExpandedChart()});
+}
+try{setSidebarCollapsed(localStorage.getItem('ek-hub-sidebar')==='collapsed')}catch(_){setSidebarCollapsed(false)}
+el('sidebarToggle').addEventListener('click',()=>setSidebarCollapsed(!document.querySelector('.layout').classList.contains('sidebar-collapsed')));
+
+// Enlarged charts share the SAME raw samples and MA rendering as the six dashboard charts.
+let enlargedCard=null,previousFocus=null;
+function drawExpandedChart(){
+  if(!enlargedCard||el('chartModal').hidden)return;
+  graph(enlargedCard,el('modalCanvas'),false);
+  el('modalDetail').textContent=graphWindow===1?'Data Asli / Realtime':`Moving Average ${graphWindow} / Realtime`;
+}
+function openExpandedChart(card){
+  previousFocus=document.activeElement;
+  enlargedCard=card;
+  el('modalTitle').textContent=card.querySelector('.metricname').textContent+' / '+card.querySelector('.unit').textContent;
+  el('modalLegend').replaceChildren(...[...card.querySelectorAll('.legend span')].map(span=>span.cloneNode(true)));
+  el('chartModal').hidden=false;
+  document.body.classList.add('modal-open');
+  el('modalClose').focus();
+  requestAnimationFrame(drawExpandedChart);
+}
+function closeExpandedChart(){
+  el('chartModal').hidden=true;
+  document.body.classList.remove('modal-open');
+  enlargedCard=null;
+  previousFocus?.focus?.();
+}
+cards.forEach(card=>{
+  const actions=document.createElement('div');actions.className='chart-actions';
+  const value=card.querySelector('.metricval');value.parentElement.insertBefore(actions,value);actions.appendChild(value);
+  const button=document.createElement('button');button.type='button';button.className='expand-chart';
+  const title=card.querySelector('.metricname').textContent;
+  button.title='Perbesar grafik '+title;button.setAttribute('aria-label','Perbesar grafik '+title);button.textContent='⛶';
+  button.addEventListener('click',()=>openExpandedChart(card));actions.appendChild(button);
+});
+el('modalClose').addEventListener('click',closeExpandedChart);
+el('chartModal').addEventListener('click',e=>{if(e.target===el('chartModal'))closeExpandedChart()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&enlargedCard)closeExpandedChart();if(e.key==='Tab'&&enlargedCard){const nodes=[...el('chartModal').querySelectorAll('button:not([disabled])')];if(nodes.length){const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}});
 document.querySelectorAll('[data-nav]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.nav)));
 document.querySelectorAll('[data-go]').forEach(n=>n.addEventListener('click',()=>switchPage(n.dataset.go)));
 document.querySelectorAll('[data-theme-choice]').forEach(n=>n.addEventListener('click',()=>setTheme(n.dataset.themeChoice)));
@@ -526,7 +681,7 @@ el('durationMode').addEventListener('change',updateDurationVisibility);
 el('start').addEventListener('click',()=>act('start'));
 el('stop').addEventListener('click',()=>act('stop'));
 el('applyLabel').addEventListener('click',()=>act('label'));
-window.addEventListener('resize',()=>cards.forEach(graph));
+window.addEventListener('resize',()=>{cards.forEach(card=>graph(card));drawExpandedChart()});
 updateDurationVisibility();
 digitalNumber("climateTempDigits","--.--");
 digitalNumber("climateHumDigits","--.--");
