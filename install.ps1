@@ -144,7 +144,8 @@ try {
         if (-not (Test-Path $destination)) { New-Item -ItemType Directory -Force $destination | Out-Null }
         $Shortcut = $Shell.CreateShortcut((Join-Path $destination 'EK Air Quality Hub.lnk'))
         $Shortcut.TargetPath = (Join-Path $PSHOME 'powershell.exe')
-        $Shortcut.Arguments = '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + (Join-Path $Install 'launch.ps1') + '"'
+        $Shortcut.Arguments = '-NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $Install 'launch.ps1') + '"'
+        $Shortcut.WindowStyle = 1  # Normal visible PowerShell terminal; closing it stops server.py.
         $Shortcut.WorkingDirectory = $Install
         $Shortcut.Description = 'EK Instrumentation - PM & Gas Laptop Server'
         $Shortcut.IconLocation = (Join-Path $Install 'assets\ek.ico') + ',0'
@@ -155,7 +156,8 @@ try {
     Write-Host ('Aplikasi: ' + $Install)
     Write-Host ('Database dan CSV: ' + $Data)
     Write-Host 'Port: 8787 | ESP endpoint: http://IP-LAPTOP:8787/api/ingest'
-    Write-Host 'Klik shortcut untuk membuka dashboard.' -ForegroundColor White
+    Write-Host 'Klik shortcut: terminal server akan muncul dan dashboard otomatis terbuka.' -ForegroundColor White
+    Write-Host 'Untuk STOP SERVER: tekan Ctrl+C atau tutup terminal yang muncul.' -ForegroundColor Yellow
 } finally {
     if (Test-Path $Temp) { Remove-Item -LiteralPath $Temp -Recurse -Force -ErrorAction SilentlyContinue }
 }

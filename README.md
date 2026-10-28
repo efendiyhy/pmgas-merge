@@ -17,13 +17,25 @@ Dashboard lokal untuk menggabungkan data dari **dua alat ESP32 yang berbeda**: a
 irm https://raw.githubusercontent.com/efendiyhy/pmgas-merge/main/install.ps1 | iex
 ```
 
-4. Setelah installer sukses, buka ikon **EK Air Quality Hub** di **Desktop** atau **Start Menu**. Dashboard otomatis dibuka di browser:
+4. Setelah installer sukses, buka ikon **EK Air Quality Hub** di **Desktop** atau **Start Menu**. Jendela **terminal server yang terlihat** akan muncul; dashboard otomatis dibuka di browser:
 
    **http://localhost:8787**
 
 Installer mengunduh kode dari branch `main` pada repository ini, memeriksa Python **3.9 atau lebih baru**, dan mengabaikan `python.exe` yang rusak, alias Windows, maupun virtual environment yang tidak lengkap (termasuk error `No pyvenv.cfg file`). Jika tidak ditemukan instalasi Python normal, installer mencoba memasang Python 3.13 melalui `winget`. Apabila Python tidak dapat dipasang otomatis, instal dari [python.org](https://www.python.org/downloads/) lalu jalankan ulang perintah di atas.
 
 **Perhatian:** `irm ... | iex` mengunduh dan langsung menjalankan skrip PowerShell. Jalankan hanya setelah memeriksa sumber dan isi [`install.ps1`](./install.ps1). Koneksi internet diperlukan pada saat instalasi.
+
+### Menjalankan dan menghentikan server (REV12)
+
+Shortcut **EK Air Quality Hub** sekarang menjalankan **Python di terminal PowerShell yang terlihat**, bukan `pythonw.exe` tersembunyi. Terminal tersebut **harus tetap terbuka** selama monitoring dan perekaman berlangsung. Anda boleh meminimalkan terminal ke taskbar.
+
+- **Start server:** klik shortcut **EK Air Quality Hub** pada Desktop/Start Menu; tunggu pesan `SERVER RUNNING`, browser akan terbuka otomatis.
+- **Stop server:** bila sedang Record, tekan tombol **STOP** di dashboard terlebih dahulu, lalu tekan `Ctrl+C` di terminal **atau tutup jendela terminal (X)**. Keduanya menghentikan proses Python server.
+- **Menutup browser saja tidak menghentikan server.** Tombol STOP di dashboard hanya untuk sesi rekaman.
+- **Menjalankan lagi:** klik shortcut lagi. Jika sudah ada server aktif pada port yang sama, shortcut hanya membuka browser tanpa memulai server kedua. Untuk mengalihkan server versi lama yang tersembunyi ke terminal baru, hentikan proses lama terlebih dahulu atau jalankan installer REV12 ulang (installer akan menghentikan proses aplikasi lama sebelum mengganti launcher).
+- Ketika server berhenti, ESP32 tidak dapat mengirim live ke laptop; data yang tersedia di SD ESP32 dapat menyusul ketika server dan Wi-Fi tersambung lagi.
+
+**Catatan:** Installer yang sudah terpasang harus dijalankan ulang setelah perubahan file `install.ps1` dan `launch.ps1` di GitHub, karena installer membuat ulang shortcut yang sebelumnya memakai `-WindowStyle Hidden`. Tidak perlu mengubah firmware PM/Gas atau `server.py`. Folder `data/` tetap dipertahankan.
 
 ### Lokasi aplikasi dan data
 
@@ -73,11 +85,11 @@ http://192.168.1.100:8787/api/ingest
 
 Untuk pengguna yang sudah menginstal aplikasinya, **hentikan server**, lalu cukup ganti file `index.html` di folder `%LOCALAPPDATA%\EKInstrumentation\LaptopServer`. Mulai lagi aplikasi melalui shortcut, dan tekan `Ctrl+F5` pada browser.
 
-Jika update melalui GitHub, push file `index.html` dan `README.md` dari patch REV11 ke branch `main`, lalu jalankan ulang installer biasa. File `install.ps1` dan `launch.ps1` REV10 tetap digunakan; `data/` tidak ditimpa dan firmware PM/Gas tidak perlu di-flash ulang.
+Pada REV12, perbarui juga `install.ps1` dan `launch.ps1` untuk mengganti launcher tersembunyi dengan terminal yang terlihat. File `server.py` dan `index.html` REV11 tidak perlu diganti; `data/` tidak ditimpa dan firmware PM/Gas tidak perlu di-flash ulang.
 
 ## Update versi aplikasi
 
-1. Hentikan sesi rekaman dengan tombol **STOP**.
+1. Hentikan sesi rekaman dengan tombol **STOP**, lalu tutup terminal server.
 2. Jalankan kembali perintah instalasi yang sama:
 
 ```powershell
@@ -117,7 +129,7 @@ Jangan langsung menimpa SQLite baru yang sudah berisi pengukuran; ekspor data la
 ## Uninstall — Windows (aman untuk data)
 
 1. Jika sesi Record sedang aktif, tekan **STOP** terlebih dahulu.
-2. Tutup jendela PowerShell/terminal yang menjalankan server, lalu tutup tab browser dashboard.
+2. Tekan `Ctrl+C` atau tutup terminal server (tombol X), lalu tutup tab browser dashboard.
 3. Buka **Windows PowerShell** dan jalankan perintah ini (tidak memerlukan `irm`):
 
 ```powershell
