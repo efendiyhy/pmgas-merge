@@ -15,6 +15,7 @@ import csv
 import hmac
 import ipaddress
 import shutil
+import socket
 import datetime as dt
 import io
 import json
@@ -412,6 +413,50 @@ def valid_ingest(p):
                 uptime_ms=uptime, measurements=out)
 
 
+
+def local_ipv4_addresses():
+    """Best-effort LAN IPv4 list without third-party modules or internet requests.
+
+    A UDP connect selects the local route without sending packets; hostname
+    resolution supplies additional adapters. Some virtual adapters may appear.
+    """
+    candidates = []
+    def append(address):
+        try:
+            parsed = ipaddress.IPv4Address(address)
+            if parsed.is_loopback or parsed.is_unspecified or parsed.is_multicast or parsed.is_link_local:
+                return
+            if address not in candidates:
+                candidates.append(address)
+        except (ipaddress.AddressValueError, TypeError):
+            pass
+
+    # Preferred interface chosen by the system routing table.
+    route_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        route_socket.connect(('192.0.2.1', 80))
+        append(route_socket.getsockname()[0])
+    except OSError:
+        pass
+    finally:
+        route_socket.close()
+
+    for name in (socket.gethostname(), socket.getfqdn()):
+        try:
+            for family, _, _, _, sockaddr in socket.getaddrinfo(name, None, socket.AF_INET):
+                if family == socket.AF_INET:
+                    append(sockaddr[0])
+        except (socket.gaierror, OSError):
+            continue
+    return candidates
+
+
+def network_info():
+    addresses = local_ipv4_addresses()
+    return {'ok': True, 'preferred_ip': addresses[0] if addresses else None,
+            'local_ips': addresses, 'port': PORT,
+            'message': 'IP lokal bisa berubah saat Wi-Fi/laptop berganti jaringan.'}
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         if '/api/ingest' not in self.path:
@@ -550,6 +595,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, (ROOT / 'index.html').read_bytes(), 'text/html; charset=utf-8')
         if path == '/favicon.ico':
             return self.reply(200, (ROOT / 'assets' / 'ek.ico').read_bytes(), 'image/x-icon')
+        if path == '/api/network':
+            return self.reply(200, network_info())
         if path == '/api/status':
             return self.reply(200, stats())
         if path in ('/api/live', '/api/records'):
@@ -610,7 +657,8 @@ if __name__ == '__main__':
             write_session_file(active['id'])
     threading.Thread(target=timer_worker, daemon=True, name='auto-stop').start()
     print(f'\nEK INSTRUMENTATION / PM + GAS LAPTOP HUB | http://localhost:{PORT}', flush=True)
-    print(f'ESP endpoint: http://<IP-LAPTOP>:{PORT}/api/ingest', flush=True)
+    print('ESP endpoint(s): ' + ', '.join('http://' + ip + ':' + str(PORT) + '/api/ingest' for ip in local_ipv4_addresses()), flush=True)
+    print('Pilih IP dari Wi-Fi/LAN yang sama dengan kedua ESP32.', flush=True)
     print(f'All local storage: {DATA} | DB: {DB} | Session CSV: {RECORDS}', flush=True)
     if not TOKEN:
         print('NOTE: LAN token OFF. Use trusted private Wi-Fi; do not expose to internet.', flush=True)

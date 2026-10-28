@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EK Instrumentation — Air Quality Hub / REV15</title><meta name="ek-ui-version" content="EK_UI_REV15"><link rel="icon" type="image/x-icon" href="/favicon.ico">
+<title>EK Instrumentation — Air Quality Hub / REV17</title><meta name="ek-ui-version" content="EK_UI_REV17"><link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
 :root{--bg:#e8dcff;--ink:#150527;--dark:#270b48;--purple:#7026dc;--purple2:#ae79ff;--purple3:#d7bcff;--white:#fffaff;--mint:#c0ffd9;--border:3px solid var(--ink)}
 *[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.3}h1,h2,h3,p{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{max-width:1490px;margin:0 auto;padding:24px}
@@ -220,7 +220,7 @@ body[data-theme="modern-dark"] .currentlabel,body[data-theme="midnight"] .curren
 body[data-theme="modern-dark"] .chip,body[data-theme="midnight"] .chip{background:var(--white);color:var(--ink)}
 @media(max-width:760px){.layout.sidebar-collapsed{display:block}.sidebar-collapsed .sidebar{padding:14px;gap:7px}.sidebar-collapsed .brand-long,.sidebar-collapsed .nav-text{display:inline}.sidebar-collapsed .sidecaption,.sidebar-collapsed .sidefooter{display:none}.sidebar-collapsed .sidenav{flex-direction:row;flex-wrap:wrap}.sidebar-collapsed .navbtn{flex:1 1 110px;justify-content:flex-start;padding:10px 8px}.sidebar-header{display:none}}
 @media(max-width:550px){.theme-choice{grid-template-columns:1fr}.chart-modal{padding:9px}.chart-modal-box{padding:14px;max-height:98vh}.chart-modal-canvas{height:48vh;min-height:230px}.modal-close{padding:9px}}
-/* REV15: cat-logo sidebar + record merged into dashboard */
+/* REV17: cat-logo sidebar + record merged into dashboard */
 .sidebar{background:linear-gradient(180deg,#24073f 0%,#19072c 42%,#10051c 100%);border-right:1px solid rgba(255,255,255,.16);box-shadow:14px 0 40px rgba(10,0,30,.24)}
 .sidebar-header{align-items:center;gap:10px}
 .brandbox.brandmark{display:grid;place-items:center;min-height:116px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.2);border-radius:24px;box-shadow:none}
@@ -253,6 +253,22 @@ body[data-theme="dark"] .brandbox.brandmark{background:rgba(255,255,255,.05);bor
 body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
 @media(max-width:760px){.brandbox.brandmark{display:grid!important;min-height:82px}.catbadge{width:64px;height:64px;border-radius:18px}.catbadge svg{width:42px;height:42px}.sidecaption{display:block}.dashboard-recgrid{grid-template-columns:1fr}.page-toolbar{margin-top:10px}}
 
+
+/* REV17 — LAN address card: one-click copying for ESP32 configuration */
+.lan-card{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin:20px 0 8px;padding:18px 20px;background:var(--white);color:var(--ink);border:var(--border);box-shadow:5px 5px 0 var(--ink);border-radius:var(--surface-radius,0px)}
+.lan-info{min-width:0;flex:1 1 260px}
+.lan-caption{font-size:11px;letter-spacing:1.5px;font-weight:1000;text-transform:uppercase;color:var(--purple)}
+.lan-ip-line{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0}
+.lan-ip{font-size:clamp(23px,3.4vw,35px);font-weight:1000;font-variant-numeric:tabular-nums;letter-spacing:-1px;overflow-wrap:anywhere}
+.lan-port{font-size:12px;font-weight:900;padding:5px 9px;border-radius:8px;background:var(--purple3);color:var(--ink)}
+.lan-detail{font-size:12px;font-weight:700;opacity:.85;line-height:1.5;overflow-wrap:anywhere}
+.lan-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.lan-button{border:2px solid var(--purple);background:var(--purple3);color:var(--ink);font-size:12px;font-weight:1000;letter-spacing:.1px;padding:11px 13px;border-radius:var(--surface-radius,8px);cursor:pointer;white-space:nowrap}
+.lan-button:hover{filter:brightness(.95)}
+.lan-button:disabled{opacity:.45;cursor:not-allowed}
+.lan-select{max-width:230px;min-width:145px;padding:11px;border:2px solid var(--purple);border-radius:var(--surface-radius,8px);background:var(--white);color:var(--ink);font-weight:900}
+.lan-copy-msg{font-size:11px;font-weight:750;color:var(--purple);min-height:1.5em;width:100%;text-align:right}
+@media(max-width:700px){.lan-card{padding:15px}.lan-actions{width:100%}.lan-actions .lan-button{flex:1}.lan-copy-msg{text-align:left}}
 </style></head>
 <body data-theme="light"><div class="layout">
 <aside class="sidebar" aria-label="Navigasi aplikasi" id="appSidebar">
@@ -277,10 +293,24 @@ body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
     <button type="button" class="navbtn" data-nav="downloads" title="Ekspor Data" aria-label="Ekspor Data"><span class="nav-icon" aria-hidden="true">⇩</span><span class="nav-text">EKSPOR DATA</span></button>
     <button type="button" class="navbtn" data-nav="settings" title="Pengaturan" aria-label="Pengaturan"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-text">PENGATURAN</span></button>
   </nav>
-  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV15</div>
+  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV17</div>
 </aside>
-<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV15</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
+<main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV17</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
 <div class="status"><span class="chip"><i id="pmDot" class="dot"></i> PM <span id="pmStatus">OFFLINE</span></span><span class="chip"><i id="gasDot" class="dot"></i> GAS <span id="gasStatus">OFFLINE</span></span><span class="chip"><i id="serverDot" class="dot on"></i> LAPTOP ONLINE</span></div></header>
+
+<section class="lan-card page-active" data-page="dashboard" aria-label="Alamat IP server laptop">
+  <div class="lan-info">
+    <div class="lan-caption">Alamat Server Laptop / LAN</div>
+    <div class="lan-ip-line"><strong class="lan-ip" id="lanIpValue">Mendeteksi IP...</strong><span class="lan-port" id="lanPort">PORT 8787</span></div>
+    <div class="lan-detail" id="lanUrl">ESP32 PM dan Gas harus berada di Wi-Fi yang sama dengan laptop.</div>
+  </div>
+  <div class="lan-actions">
+    <select id="lanIpSelect" class="lan-select" aria-label="Pilih alamat IP laptop" hidden></select>
+    <button class="lan-button" type="button" id="copyLanIP" disabled>SALIN IP</button>
+    <button class="lan-button" type="button" id="copyLanUrl" disabled>SALIN LINK</button>
+    <div class="lan-copy-msg" id="lanCopyMessage" role="status" aria-live="polite"></div>
+  </div>
+</section>
 <section class="summary page-active" data-page="dashboard"><div class="stat"><small>Data masuk / total</small><strong id="nTotal">0</strong></div><div class="stat"><small>Data PM</small><strong id="nPM">0</strong></div><div class="stat"><small>Data gas</small><strong id="nGas">0</strong></div><div class="stat"><small>Sesi saat ini</small><strong id="nSession">—</strong></div></section>
 <div class="page-intro page-active compact" data-page="dashboard"><h2>Dashboard &amp; Sampling</h2><p>Monitoring realtime, sampling/record, dan pelabelan manual kini berada dalam satu halaman.</p></div>
 <section class="recgrid dashboard-recgrid page-active" aria-label="Pengaturan rekaman" data-page="dashboard" id="samplingPanel">
@@ -728,6 +758,59 @@ window.addEventListener('resize',()=>{cards.forEach(card=>graph(card));drawExpan
 updateDurationVisibility();
 digitalNumber("climateTempDigits","--.--");
 digitalNumber("climateHumDigits","--.--");
+
+// REV17: server-side LAN IPv4 discovery; localhost is not an ESP32-accessible address.
+let lanList=[],lanPrimary='',lanChosen='',lanListeningPort=8787;
+function displayLanAddress(){
+  const ip=lanChosen;
+  el('lanIpValue').textContent=ip||'IP BELUM TERDETEKSI';
+  el('lanPort').textContent='PORT '+lanListeningPort;
+  el('lanUrl').textContent=ip?`Dashboard dari ESP/jaringan: http://${ip}:${lanListeningPort} · Kedua ESP harus di Wi-Fi/LAN yang sama.`:
+    'Sambungkan laptop ke Wi-Fi/LAN, lalu klik Refresh halaman. Jika menggunakan banyak adapter, pilih jaringan yang sesuai.';
+  el('copyLanIP').disabled=!ip;
+  el('copyLanUrl').disabled=!ip;
+}
+async function fetchLanAddress(){
+  try{
+    const response=await fetch('/api/network',{cache:'no-store'});
+    if(!response.ok)throw new Error('API jaringan belum tersedia (server.py perlu REV17)');
+    const data=await response.json();
+    if(!data.ok)throw new Error('Gagal membaca IP laptop');
+    lanList=Array.isArray(data.local_ips)?data.local_ips.filter(x=>typeof x==='string'):[];
+    lanPrimary=typeof data.preferred_ip==='string'?data.preferred_ip:'';
+    lanListeningPort=Number(data.port)||8787;
+    if(!lanList.includes(lanChosen))lanChosen=lanPrimary||lanList[0]||'';
+    const select=el('lanIpSelect');
+    select.hidden=lanList.length<2;
+    select.replaceChildren();
+    for(const ip of lanList){const opt=document.createElement('option');opt.value=ip;opt.textContent=ip;select.appendChild(opt)}
+    if(lanChosen)select.value=lanChosen;
+    if(el('lanCopyMessage').dataset.kind==='error'){el('lanCopyMessage').textContent='';delete el('lanCopyMessage').dataset.kind}
+    displayLanAddress();
+  }catch(err){
+    const fallback=location.hostname;
+    if(!lanChosen && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(fallback) && !fallback.startsWith('127.'))lanChosen=fallback;
+    displayLanAddress();
+    if(!lanChosen){el('lanCopyMessage').textContent=err.message;el('lanCopyMessage').dataset.kind='error'}
+  }
+}
+el('lanIpSelect').addEventListener('change',event=>{lanChosen=event.target.value;displayLanAddress()});
+async function copyLanText(value){
+  if(!value)return;
+  try{
+    if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value)}
+    else{
+      const field=document.createElement('textarea');field.value=value;field.style.position='fixed';field.style.opacity='0';document.body.appendChild(field);field.select();
+      const done=document.execCommand('copy');field.remove();if(!done)throw Error('Salin manual');
+    }
+    el('lanCopyMessage').textContent='Tersalin: '+value;
+  }catch(_){el('lanCopyMessage').textContent='Salin manual: '+value}
+}
+el('copyLanIP').addEventListener('click',()=>copyLanText(lanChosen));
+el('copyLanUrl').addEventListener('click',()=>copyLanText(lanChosen?`http://${lanChosen}:${lanListeningPort}`:''));
+fetchLanAddress();
+setInterval(fetchLanAddress,30000);
+
 refresh();
 setInterval(refresh,1000);
 setInterval(updateClock,250);
