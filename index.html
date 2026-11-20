@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EK Instrumentation — Air Quality Hub / REV17</title><meta name="ek-ui-version" content="EK_UI_REV17"><link rel="icon" type="image/x-icon" href="/favicon.ico">
+<title>EK Instrumentation — Air Quality Hub / REV18</title><meta name="ek-ui-version" content="EK_UI_REV18"><link rel="icon" type="image/x-icon" href="/favicon.ico">
 <style>
 :root{--bg:#e8dcff;--ink:#150527;--dark:#270b48;--purple:#7026dc;--purple2:#ae79ff;--purple3:#d7bcff;--white:#fffaff;--mint:#c0ffd9;--border:3px solid var(--ink)}
 *[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;line-height:1.3}h1,h2,h3,p{margin:0}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}.app{max-width:1490px;margin:0 auto;padding:24px}
@@ -269,6 +269,7 @@ body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
 .lan-select{max-width:230px;min-width:145px;padding:11px;border:2px solid var(--purple);border-radius:var(--surface-radius,8px);background:var(--white);color:var(--ink);font-weight:900}
 .lan-copy-msg{font-size:11px;font-weight:750;color:var(--purple);min-height:1.5em;width:100%;text-align:right}
 @media(max-width:700px){.lan-card{padding:15px}.lan-actions{width:100%}.lan-actions .lan-button{flex:1}.lan-copy-msg{text-align:left}}
+.rangebox{margin:14px 0}.rangerow{display:flex;flex-wrap:wrap;gap:12px}.rangerow label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:900}.rangerow input{padding:9px 10px;border:3px solid var(--ink);background:var(--white);color:var(--ink);font:inherit;font-weight:700}.presetrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 </style></head>
 <body data-theme="light"><div class="layout">
 <aside class="sidebar" aria-label="Navigasi aplikasi" id="appSidebar">
@@ -293,7 +294,7 @@ body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
     <button type="button" class="navbtn" data-nav="downloads" title="Ekspor Data" aria-label="Ekspor Data"><span class="nav-icon" aria-hidden="true">⇩</span><span class="nav-text">EKSPOR DATA</span></button>
     <button type="button" class="navbtn" data-nav="settings" title="Pengaturan" aria-label="Pengaturan"><span class="nav-icon" aria-hidden="true">⚙</span><span class="nav-text">PENGATURAN</span></button>
   </nav>
-  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV17</div>
+  <div class="sidefooter">LOCAL SERVER / PORT 8787<br>PM + GAS / ESP32 CLASSIC<br>EK UI REV18</div>
 </aside>
 <main class="app"><header><div><div class="eyebrow logo">EK INSTRUMENTATION · UI REV17</div><h1>AIR QUALITY<br>DATA HUB<span style="color:var(--purple)">.</span></h1><p class="subtitle">ESP32 PM + GAS / LIVE LAN DASHBOARD / NO CLOUD REQUIRED</p></div>
 <div class="status"><span class="chip"><i id="pmDot" class="dot"></i> PM <span id="pmStatus">OFFLINE</span></span><span class="chip"><i id="gasDot" class="dot"></i> GAS <span id="gasStatus">OFFLINE</span></span><span class="chip"><i id="serverDot" class="dot on"></i> LAPTOP ONLINE</span></div></header>
@@ -398,9 +399,18 @@ body[data-theme="dark"] .navbtn.active{background:#7342b8;color:#fff}
 <p class="hint page-active" data-page="dashboard">DATA STORAGE: SQLite otomatis menyimpan semua parameter termasuk suhu, kelembapan, tegangan sensor, dan Rs/R0, meskipun tidak tampil di grafik. CSV sesi dan CSV gabungan menggabungkan PM + Gas per detik berdasarkan timestamp pengukuran, tanpa kolom device, serta menyimpan session_name dan label. Bila salah satu sumber tidak tersedia untuk detik tersebut, kolomnya dibiarkan kosong; CSV mentah tetap tersedia untuk audit. Record otomatis berhenti sesuai durasi atau manual lewat STOP. Endpoint ESP: <b>/api/ingest</b>, port <b>8787</b>. Gunakan jaringan LAN tepercaya.</p>
 
 <div class="page-intro" data-page="downloads"><h2>Ekspor &amp; Database</h2><p>Unduh data asli, gabungan, atau hasil sesi. File lokal berada dalam satu folder.</p></div>
+<section data-page="downloads" class="rangebox" aria-label="Rentang waktu unduhan">
+  <div class="rangerow">
+    <label>DARI (JAM LOKAL)<input type="datetime-local" id="dlFrom"></label>
+    <label>SAMPAI (JAM LOKAL)<input type="datetime-local" id="dlTo"></label>
+    <label>ISI DATA KOSONG MAKS. (DETIK)<input type="number" id="dlGap" value="300" min="0" max="3600" step="30" title="0 = jangan isi"></label>
+  </div>
+  <div class="presetrow" id="dlPreset"><button type="button" class="quickbutton" data-p="1">1 JAM</button><button type="button" class="quickbutton" data-p="6">6 JAM</button><button type="button" class="quickbutton" data-p="24">24 JAM</button><button type="button" class="quickbutton" data-p="today">HARI INI</button><button type="button" class="quickbutton" data-p="all">SEMUA</button></div>
+  <p class="microcopy">Kosongkan Dari/Sampai untuk mengunduh semua data. Rentang memakai <b>waktu ukur sensor</b>. Setiap unduhan berupa ZIP berisi data CSV dan <b>KETERANGAN.txt</b> (data apa, rentang, pengolahan, arti dan satuan kolom). Nilai kosong pada CSV gabungan sudah diisi dari data sebelumnya.</p>
+</section>
 <section data-page="downloads" class="download-grid">
-  <article class="download-tile"><strong>01 / CSV Gabungan</strong><p>PM dan Gas dipasangkan berdasarkan waktu sensor, tanpa kolom device; mencakup seluruh parameter.</p><a class="button secondary" href="/api/download/all">UNDUH CSV</a></article>
-  <article class="download-tile"><strong>02 / CSV Mentah</strong><p>Setiap paket sensor disimpan apa adanya untuk audit, lengkap dengan waktu terima dan identitas sumber.</p><a class="button secondary" href="/api/download/raw">UNDUH CSV</a></article>
+  <article class="download-tile"><strong>01 / CSV Gabungan</strong><p>PM dan Gas dipasangkan berdasarkan waktu sensor; nilai yang hilang diisi dari data sebelumnya (maks. sesuai batas isian) dan ditandai pada filled_columns.</p><a class="button secondary" href="/api/download/all" data-dl="/api/download/all">UNDUH ZIP</a></article>
+  <article class="download-tile"><strong>02 / CSV Mentah</strong><p>Setiap paket sensor apa adanya untuk audit (tanpa gabung dan tanpa isian), lengkap dengan waktu terima dan identitas sumber.</p><a class="button secondary" href="/api/download/raw" data-dl="/api/download/raw">UNDUH ZIP</a></article>
   <article class="download-tile"><strong>03 / CSV Sesi</strong><p>Pilih sesi dari Riwayat Record untuk mengunduh CSV yang sesuai sesi dan perubahan labelnya.</p><button type="button" class="button secondary" data-go="history">BUKA RIWAYAT</button></article>
 </section>
 <div class="page-intro" data-page="settings"><h2>Pengaturan Aplikasi</h2><p>Tema tampilan, informasi penyimpanan, dan pengelolaan data lokal.</p></div>
@@ -583,10 +593,27 @@ function renderSessions(ss){
     const columns=[s.id,s.name||('(sesi lama #'+s.id+')'),mode,s.started_at,s.stopped_at||'● RECORDING'];
     columns.forEach(value=>{const td=tr.insertCell();td.textContent=value});
     const td=tr.insertCell(),link=document.createElement('a');
-    link.href='/api/download/session?id='+encodeURIComponent(s.id);link.textContent='Download CSV';td.appendChild(link);
+    link.href='/api/download/session?id='+encodeURIComponent(s.id);link.textContent='Download ZIP';td.appendChild(link);
   });
 }
 let currentSession=null;
+(function(){
+  const iso=(v,extra)=>{if(!v)return '';const t=new Date(v).getTime();return isNaN(t)?'':new Date(t+(extra||0)).toISOString()};
+  const loc=d=>{const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())};
+  document.querySelectorAll('[data-dl]').forEach(a=>a.addEventListener('click',e=>{
+    e.preventDefault();
+    const q=new URLSearchParams(),f=iso(el('dlFrom').value),t=iso(el('dlTo').value,60000);   // jam akhir ikut sampai menit itu selesai
+    if(f)q.set('from',f);if(t)q.set('to',t);
+    const g=el('dlGap').value;if(g!=='')q.set('gap',g);
+    location.href=a.dataset.dl+'?'+q.toString();
+  }));
+  el('dlPreset').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;const now=new Date(),p=b.dataset.p;
+    if(p==='all'){el('dlFrom').value='';el('dlTo').value='';}
+    else if(p==='today'){const s=new Date(now);s.setHours(0,0,0,0);el('dlFrom').value=loc(s);el('dlTo').value=loc(now);}
+    else{el('dlFrom').value=loc(new Date(now.getTime()-p*3600000));el('dlTo').value=loc(now);}
+  });
+})();
 let requestBusy=false,refreshBusy=false;
 function clockText(ms){
   const total=Math.max(0,Math.floor(ms/1000)),h=Math.floor(total/3600),m=Math.floor(total/60)%60,s=total%60;

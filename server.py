@@ -16,6 +16,8 @@ import hmac
 import ipaddress
 import shutil
 import socket
+import calendar
+import zipfile
 import datetime as dt
 import io
 import json
@@ -83,8 +85,10 @@ MERGED_COLS = (
     + ['pm1_avg', 'pm25_avg', 'pm10_avg', 'co_ppm', 'co2_ppm', 'no2_ppm']
     + PM_FIELDS
     + ['gas_' + key for key in GAS_FIELDS[3:]]
-    + ['pm_sample_name', 'gas_sample_name', 'pm_uptime_ms', 'gas_uptime_ms']
+    + ['pm_sample_name', 'gas_sample_name', 'pm_uptime_ms', 'gas_uptime_ms', 'filled_columns']
 )
+FILL_FIRST, FILL_LAST = 5, 24   # indeks kolom nilai (pm1_avg .. gas_nox_ratio) yang boleh diisi dari nilai sebelumnya
+FILL_GAP_DEFAULT = 300         # detik: batas jarak waktu pengisian dari nilai valid sebelumnya
 MAX_DURATION_SECONDS = 7 * 24 * 60 * 60
 
 
@@ -199,11 +203,45 @@ def mean_available(values):
     return round(sum(vals) / len(vals), 3) if vals else None
 
 
-def merged_csv_rows(source_rows):
-    """Pair distinct PM & Gas packets within same measured UTC second and session.
+def second_epoch(second):
+    return calendar.timegm(dt.datetime.strptime(second, '%Y-%m-%dT%H:%M:%SZ').timetuple())
 
-    Multiple samples in the same second are never silently discarded. If a side is
-    absent it is left blank; this prevents false PM/Gas pairings from SD backlogs.
+
+def parse_range(q):
+    """?from=...&to=... (ISO UTC, mis. 2026-11-20T01:00:00Z) -> (t0, t1) epoch detik; t1 tidak ikut. None = tidak dibatasi."""
+    def one(key):
+        raw = (q.get(key) or [''])[0].strip()
+        if not raw:
+            return None
+        try:
+            return parse_utc(raw).timestamp()
+        except (ValueError, OverflowError):
+            return None
+    return one('from'), one('to')
+
+
+def parse_gap(q):
+    try:
+        return max(0, min(86400, int((q.get('gap') or [FILL_GAP_DEFAULT])[0])))
+    except (ValueError, TypeError):
+        return FILL_GAP_DEFAULT
+
+
+def row_in_range(item, t0, t1):
+    if t0 is None and t1 is None:
+        return True
+    sec = second_epoch(sensor_second(item)[0])
+    return (t0 is None or sec >= t0) and (t1 is None or sec < t1)
+
+
+def merged_csv_rows(source_rows, t0=None, t1=None, gap=FILL_GAP_DEFAULT):
+    """Pair distinct PM & Gas packets within same measured UTC second and session, then SYNCHRONISE.
+
+    Multiple samples in the same second are never silently discarded. If one side (or one value) is
+    absent at a second, it is filled with the last valid value before it, at most ``gap`` seconds old
+    and within the same session (gap=0 disables filling); the filled columns are listed in
+    ``filled_columns``. Older values than the gap stay blank. Rows are limited to [t0, t1) AFTER filling
+    so data just before the range can still serve as the filler.
     """
     buckets = {}
     for row in source_rows:
@@ -215,6 +253,7 @@ def merged_csv_rows(source_rows):
         kinds = buckets.setdefault(key, {'pm': [], 'gas': []})
         kinds[item['device_type']].append(item)
 
+    built = []   # (epoch, session_id, row-with-None)
     for key in sorted(buckets, key=lambda k: (k[0], k[2] if k[2] is not None else -1, k[1])):
         second, basis, session_id = key
         group = buckets[key]
@@ -244,12 +283,83 @@ def merged_csv_rows(source_rows):
                    + [gv.get(k) for k in GAS_FIELDS[3:]]
                    + [(pm or {}).get('sample_name'), (gas or {}).get('sample_name'),
                       (pm or {}).get('uptime_ms'), (gas or {}).get('uptime_ms')])
+            built.append((second_epoch(second), session_id, row))
+
+    last, last_session = {}, object()
+    for epoch, session_id, row in built:
+        if session_id != last_session:
+            last, last_session = {}, session_id      # pengisian tidak melintasi batas sesi
+        filled = []
+        for idx in range(FILL_FIRST, FILL_LAST + 1):
+            v = row[idx]
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v):
+                last[idx] = (v, epoch)
+            elif gap and idx in last and epoch - last[idx][1] <= gap:
+                row[idx] = last[idx][0]
+                filled.append(MERGED_COLS[idx])
+        row.append(';'.join(filled))
+        if (t0 is None or epoch >= t0) and (t1 is None or epoch < t1):
             yield [safe_csv_cell(x) for x in row]
 
 
-def write_csv_merged(writer, rows):
+def write_csv_merged(writer, rows, t0=None, t1=None, gap=FILL_GAP_DEFAULT):
     writer.writerow(MERGED_COLS)
-    writer.writerows(merged_csv_rows(rows))
+    writer.writerows(merged_csv_rows(rows, t0, t1, gap))
+
+
+# ---- Keterangan data pada setiap unduhan (ZIP berisi CSV + KETERANGAN.txt)
+COL_MERGED = [
+    ('time_utc', 'Waktu UKUR sensor (UTC, ketelitian 1 detik)'),
+    ('session_name', 'Nama sesi record yang aktif saat data diterima'),
+    ('label', 'Label kondisi/eksperimen yang aktif saat data diterima'),
+    ('sync_status', 'LENGKAP = PM dan Gas ada pada detik itu; HANYA_PM / HANYA_GAS = salah satu alat tidak mengirim pada detik itu (nilainya diisi, lihat filled_columns); LABEL_BERBEDA = label kedua alat berbeda'),
+    ('time_basis', 'SENSOR = memakai jam sensor; RECEIVED = jam sensor tidak sah sehingga memakai waktu terima'),
+    ('pm1_avg, pm25_avg, pm10_avg', 'PM1, PM2,5, PM10 rata-rata dua sensor PMS (ug/m3)'),
+    ('co_ppm, co2_ppm, no2_ppm', 'Karbon monoksida, karbon dioksida, nitrogen dioksida (ppm)'),
+    ('pm1_pms1 ... pm10_pms2', 'PM1, PM2,5, PM10 mentah sensor PMS nomor 1 dan 2 (ug/m3)'),
+    ('suhu, kelembapan', 'Suhu (C) dan kelembapan (%) dari modul PM'),
+    ('gas_suhu_c, gas_rh_pct', 'Suhu (C) dan kelembapan (%) dari modul Gas'),
+    ('gas_red_v, gas_nox_v, gas_red_ratio, gas_nox_ratio', 'Tegangan (V) dan rasio Rs/R0 sensor gas RED dan NOx'),
+    ('pm_sample_name, gas_sample_name, pm_uptime_ms, gas_uptime_ms', 'Nama sampel firmware dan waktu hidup alat sejak menyala (ms)'),
+    ('filled_columns', 'Kolom pada baris itu yang KOSONG lalu diisi dari nilai valid sebelumnya; kosong = semua nilai asli hasil ukur'),
+]
+COL_RAW = [
+    ('received_at', 'Waktu paket diterima server (UTC)'), ('timestamp', 'Waktu ukur menurut jam sensor (UTC)'), ('event_id', 'ID unik paket'),
+    ('device_id, device_type', 'ID perangkat ESP32; pm = alat partikulat, gas = alat gas'), ('sample_name, uptime_ms', 'Nama sampel dan waktu hidup alat (ms)'),
+    ('pm1_pms1 ... pm10_pms2, suhu, kelembapan', 'Nilai mentah modul PM (ug/m3, C, %)'), ('co_ppm, co2_ppm, no2_ppm', 'Nilai gas (ppm)'),
+    ('suhu_c, rh_pct, red_v, nox_v, red_ratio, nox_ratio', 'Suhu, kelembapan, tegangan, dan rasio sensor modul Gas'), ('session_name, label', 'Sesi dan label saat paket diterima'),
+]
+
+
+def describe(title, about, columns, t0, t1, rows, notes):
+    def fmt(t):
+        return dt.datetime.fromtimestamp(t, dt.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+    span = 'semua data yang tersimpan' if t0 is None and t1 is None else (
+        (fmt(t0) if t0 is not None else 'awal data') + ' sampai ' + (fmt(t1) if t1 is not None else 'data terakhir') + ' (batas akhir tidak ikut)')
+    lines = [title.upper(), '=' * len(title), '', 'DATA APA INI', about, '', 'RENTANG WAKTU (waktu ukur sensor)', span, '',
+             f'JUMLAH BARIS DATA: {rows}', '', 'CATATAN PENGOLAHAN'] + ['- ' + n for n in notes] + ['', 'ARTI KOLOM'] + [f'- {c}: {d}' for c, d in columns]
+    lines += ['', 'Dibuat: ' + iso(), 'Sumber: EK Air Quality Hub (EK Instrumentation)']
+    return '\n'.join(lines) + '\n'
+
+
+def fill_notes(gap):
+    return ([f'Nilai KOSONG diisi dengan nilai valid terakhir sebelumnya selama selisih waktu paling lama {gap} detik dan di sesi yang sama; lebih dari itu tetap kosong. Kolom yang diisi tercatat di filled_columns.']
+            if gap else ['Pengisian nilai kosong dimatikan (gap=0): sel tanpa pembacaan dibiarkan kosong.'])
+
+
+def zip_bytes(base, csv_text, info):
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr(base + '.csv', '\ufeff' + csv_text)
+        z.writestr('KETERANGAN.txt', '\ufeff' + info)
+    return buf.getvalue()
+
+
+def range_tag(t0, t1):
+    if t0 is None and t1 is None:
+        return 'semua'
+    f = lambda t: dt.datetime.fromtimestamp(t, dt.timezone.utc).strftime('%Y%m%d-%H%MZ')
+    return (f(t0) if t0 is not None else 'awal') + '_' + (f(t1) if t1 is not None else 'akhir')
 
 
 def write_session_file(session_id):
@@ -610,25 +720,42 @@ class Handler(BaseHTTPRequestHandler):
                 data = [rec for rec in data if rec['device_type'] == kind]
             return self.reply(200, {'records': data})
         if path in ('/merged.csv', '/download.csv', '/api/download/all'):
-            # User-facing CSV: one row per source measurement second + recording session.
-            # No device_id or device_type. Preserve raw data in SQLite /raw.csv.
+            # User-facing: ZIP = CSV gabungan PM+Gas per detik ukur (sudah diisi) + KETERANGAN.txt. Data mentah tetap di /api/download/raw.
+            t0, t1 = parse_range(q)
+            gap = parse_gap(q)
             data = io.StringIO()
+            n = 0
             with db_connect() as c:
                 sql, args = row_query()
-                write_csv_merged(csv.writer(data), c.execute(sql, args))
-            return self.reply(200, '\ufeff' + data.getvalue(), 'text/csv; charset=utf-8', 'EK_PM_GAS_GABUNGAN.csv')
+                writer = csv.writer(data)
+                writer.writerow(MERGED_COLS)
+                for r in merged_csv_rows(c.execute(sql, args), t0, t1, gap):
+                    writer.writerow(r); n += 1
+            info = describe('PM dan Gas - gabungan per detik (sudah diisi)',
+                            'Data dua alat ESP32 (PM partikulat dan Gas) yang disinkronkan menurut WAKTU UKUR sensor, satu baris per detik. Nilai yang hilang sudah ditangani sehingga siap dianalisis.',
+                            COL_MERGED, t0, t1, n,
+                            ['Penggabungan memakai waktu ukur pada paket sensor, bukan waktu paket diterima (paket antrean microSD tidak salah pasang).'] + fill_notes(gap)
+                            + ['Data asli sebelum pengisian tersedia pada unduhan CSV mentah.'])
+            return self.reply(200, zip_bytes('EK_PM_GAS_GABUNGAN', data.getvalue(), info), 'application/zip',
+                              f'EK_PM_GAS_GABUNGAN_{range_tag(t0, t1)}.zip')
         if path in ('/raw.csv', '/api/download/raw'):
+            t0, t1 = parse_range(q)
             data = io.StringIO()
             writer = csv.writer(data)
             writer.writerow(COLS)
             kind = q.get('device_type', ['all'])[0]
+            n = 0
             with db_connect() as c:
                 where = 'WHERE readings.device_type=?' if kind in FIELDS else ''
                 args = (kind,) if kind in FIELDS else ()
                 sql, params = row_query(where, params=args)
                 for r in c.execute(sql, params):
-                    writer.writerow(csv_row(r))
-            return self.reply(200, '\ufeff' + data.getvalue(), 'text/csv; charset=utf-8', 'EK_PM_GAS_MENTAH.csv')
+                    if row_in_range(dict(r), t0, t1):
+                        writer.writerow(csv_row(r)); n += 1
+            info = describe('PM dan Gas - data mentah',
+                            'Setiap paket yang diterima dari ESP32 apa adanya (satu baris per paket), untuk audit. TIDAK digabung dan TIDAK diisi; nilai kosong tetap kosong.',
+                            COL_RAW, t0, t1, n, ['Rentang waktu memakai waktu ukur sensor (atau waktu terima bila jam sensor tidak sah).'])
+            return self.reply(200, zip_bytes('EK_PM_GAS_MENTAH', data.getvalue(), info), 'application/zip', f'EK_PM_GAS_MENTAH_{range_tag(t0, t1)}.zip')
         if path == '/api/download/session':
             try:
                 sid = int(q.get('id', ['0'])[0])
@@ -642,8 +769,11 @@ class Handler(BaseHTTPRequestHandler):
                 if not sess:
                     return self.reply(404, {'ok': False, 'error': 'Session not found'})
                 path_csv = write_session_file(sid)
-                data = path_csv.read_bytes()
-            return self.reply(200, data, 'text/csv; charset=utf-8', download_filename(sid, sess['name']))
+                text = path_csv.read_text(encoding='utf-8-sig')
+            info = describe('PM dan Gas - CSV sesi #%d (%s)' % (sid, sess['name'] or 'tanpa nama'),
+                            'Data gabungan PM+Gas per detik ukur hanya untuk satu sesi record, lengkap dengan label dan perubahan label selama sesi.',
+                            COL_MERGED, None, None, max(0, text.count('\n') - 1), ['Hanya data yang diterima selama sesi ini.'] + fill_notes(FILL_GAP_DEFAULT))
+            return self.reply(200, zip_bytes(download_filename(sid, sess['name'])[:-4], text, info), 'application/zip', download_filename(sid, sess['name'])[:-4] + '.zip')
         return self.reply(404, {'ok': False, 'error': 'Not found'})
 
 

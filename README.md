@@ -92,7 +92,7 @@ Sumber data tetap terpisah: ESP32 PM membaca sensor partikulat, sedangkan ESP32 
 | **Grafik pop-up** | Perbesar setiap grafik dan lanjutkan pembaruan realtime. |
 | **Suhu & kelembapan** | Dua widget digital berbentuk lingkaran; rata-rata pembacaan PM dan Gas jika keduanya tersedia dan valid. |
 | **Sampling & Record** | Nama sesi, mode manual atau durasi otomatis, Stop, serta pergantian label tanpa menghentikan sesi. |
-| **Riwayat & ekspor** | CSV sesi, CSV gabungan per waktu pengukuran, dan CSV mentah untuk audit. |
+| **Riwayat & ekspor** | CSV sesi, CSV gabungan per waktu pengukuran (data kosong diisi dari data sebelumnya), dan CSV mentah untuk audit; pilihan rentang jam dan keterangan data di setiap unduhan (ZIP). |
 | **Antarmuka** | Sidebar dengan logo kucing yang dapat diperkecil; enam tema (Brutal Light/Dark, Modern Light/Dark, Scientific, Midnight). |
 | **Pengaturan** | Informasi LAN, pengelolaan data lokal, dan penghapusan berkonfirmasi. |
 
@@ -102,9 +102,13 @@ Contoh sesi **Uji Emisi Motor A**: mulai dengan label `RPM1000`, lalu saat kondi
 
 > **Penting:** Semua paket yang diterima disimpan sebagai data mentah dalam SQLite meskipun Record belum dimulai. Mode Record memberi metadata sesi dan label. Bila ESP mengirim *backlog* microSD, label yang aktif saat data diterima dapat melekat pada data tertunda. Untuk analisis yang membutuhkan label tepat menurut waktu eksperimen, pastikan pengiriman realtime dan sinkronisasi jam perangkat.
 
-### CSV gabungan
+### CSV gabungan (sinkronisasi dan pengisian data kosong)
 
-Data PM dan Gas ditempatkan dalam satu baris untuk **detik pengukuran yang sama**. Bila salah satu alat tidak memiliki pengukuran pada detik itu, kolomnya tetap kosong. File mentah mempertahankan identitas perangkat untuk audit; ekspor gabungan tidak memerlukan kolom device.
+Data PM dan Gas ditempatkan dalam satu baris untuk **detik pengukuran yang sama**. Bila pada detik itu salah satu alat tidak mengirim (atau satu nilai kosong), nilainya **diisi dengan nilai valid terakhir sebelumnya**: paling lama **300 detik** sebelumnya (dapat diubah, `0` = tidak diisi) dan tidak melintasi batas sesi. Kolom yang diisi dicatat pada `filled_columns`; `sync_status` tetap menunjukkan apakah detik itu `LENGKAP`, `HANYA_PM`, atau `HANYA_GAS`. Nilai tanpa data sebelumnya dalam batas itu tetap kosong. File mentah tidak diisi dan mempertahankan identitas perangkat untuk audit.
+
+### Unduhan: pilihan jam dan keterangan data
+
+Halaman **Ekspor Data** memiliki pilihan **Dari / Sampai (tanggal dan jam)**, tombol cepat (1 jam, 6 jam, 24 jam, hari ini, semua), dan batas isian data kosong. Rentang memakai waktu ukur sensor. Setiap unduhan berupa **ZIP** berisi CSV dan `KETERANGAN.txt` (data apa itu, rentang waktu, jumlah baris, catatan pengolahan, serta arti dan satuan tiap kolom). Endpoint: `/api/download/all`, `/api/download/raw`, `/api/download/session?id=N` dengan parameter opsional `from`, `to` (ISO UTC) dan `gap` (detik).
 
 ## Penyimpanan lokal
 
